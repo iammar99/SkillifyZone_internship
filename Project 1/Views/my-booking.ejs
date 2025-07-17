@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Time</title>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <!-- Toastify js -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!-- Add icon library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/StyleSheets/style.css">
+</head>
+
+<body>
+    <header>
+        <!-- navbar -->
+        <nav class="navbar navbar-expand-lg ">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/"><img style="width: 55px;" src="/Images/logo.png" alt=""></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" aria-current="page" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="color: #d4a574;" href="/my-booking">My Booking</a>
+                        </li>
+                        <% if(token && role == "admin"){ %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin">Dashboard</a>
+                            </li>
+                        <% } %>
+                    </ul>
+                    <% if(token){ %>
+                        <button class="btn btn-outline-danger" onclick="window.location.href='/logout'">
+                            Logout
+                        </button>
+                        <% } else { %>
+                            <button class="btn btn-outline-success" onclick="window.location.href='/login'">
+                                Login
+                            </button>
+                            <% } %>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+
+        <div class="container my-5">
+            <div class="row g-4">
+                <% if (bookings.length===0) { %>
+                    <div class="col-12 text-center">
+                        <p class="text-muted">You haven't made any reservations yet.</p>
+                        <button onclick="window.location.href='/book'" class="filled">
+                            Book A Table
+                        </button>
+                    </div>
+                    <% }else { %>
+                        <h2 class="text-center mb-4 fw-bold">☕ My Reservations</h2>
+                        <% bookings.forEach(booking=> { %>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card border-0 shadow rounded-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-2 fw-semibold">
+                                            <i class="fa-solid fa-user me-2 text-warning"></i>
+                                            <%= booking.name %>
+                                        </h5>
+                                        <p class="mb-1">
+                                            <i class="fa-solid fa-calendar-days me-2 text-secondary"></i>
+                                            <strong>Date:</strong>
+                                            <%= new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric' ,
+                                                month: 'short' , day: 'numeric' }) %>
+                                        </p>
+                                        <p class="mb-1">
+                                            <i class="fa-solid fa-clock me-2 text-secondary"></i>
+                                            <strong>Time:</strong>
+                                            <%= booking.time %>
+                                        </p>
+                                        <p class="mb-1">
+                                            <i class="fa-solid fa-users me-2 text-secondary"></i>
+                                            <strong>Guests:</strong>
+                                            <%= booking.count %>
+                                        </p>
+                                        <p class="mb-3">
+                                            <i class="fa-solid fa-mug-saucer text-secondary"></i>
+                                            <strong>Table #:</strong>
+                                            <%= booking.tableNo %>
+                                        </p>
+
+                                        <div class="d-flex justify-content-between">
+                                            <!-- Edit Button -->
+                                            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editModal-<%= booking._id %>">Edit</button>
+
+                                            <!-- Cancel Button -->
+                                            <button class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#cancelModal-<%= booking._id %>">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- ✏️ Edit Modal -->
+                            <div class="modal fade" id="editModal-<%= booking._id %>" tabindex="-1"
+                                aria-labelledby="editLabel-<%= booking._id %>" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content rounded-4">
+                                        <form action="/edit/<%= booking._id %>" method="post" id="editForm"
+                                            class="editForm">
+                                            <div class="modal-header">
+                                                <h1 class="modal-title fs-5" id="editLabel-<%= booking._id %>">Edit
+                                                    Reservation</h1>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Name</label>
+                                                    <input type="text" name="name" class="form-control"
+                                                        value="<%= booking.name %>" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Date</label>
+                                                    <input type="date" name="date" class="form-control"
+                                                        value="<%= booking.date %>" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Time</label>
+                                                    <% // Convert time from "hh:mm AM/PM" to "HH:mm" (24-hour) const
+                                                        [timeString, modifier]=booking.time.split(' ');
+                                                        let [hours, minutes] = timeString.split(' :'); if
+                                                        (modifier==='PM' && hours !=='12' ) hours=parseInt(hours) + 12;
+                                                        if (modifier==='AM' && hours==='12' ) hours='00' ; const
+                                                        time24=`${String(hours).padStart(2, '0' )}:${minutes}`; %>
+                                                        <input type="time" name="time" class="form-control"
+                                                            value="<%= time24 %>" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Guest Count</label>
+                                                    <input type="number" name="count" class="form-control"
+                                                        value="<%= booking.count %>" required>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-success">Save Changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ❌ Cancel Modal -->
+                            <div class="modal fade" id="cancelModal-<%= booking._id %>" tabindex="-1"
+                                aria-labelledby="cancelLabel-<%= booking._id %>" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content rounded-4">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="cancelLabel-<%= booking._id %>">
+                                                Cancel Booking: <%= booking.name %>
+                                            </h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to cancel your reservation?</p>
+                                            <ul class="list-unstyled">
+                                                <li><strong>Date:</strong>
+                                                    <%= booking.date %>
+                                                </li>
+                                                <li><strong>Time:</strong>
+                                                    <%= booking.time %>
+                                                </li>
+                                                <li><strong>Guests:</strong>
+                                                    <%= booking.count %>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <form action="/cancel/<%= booking._id %>" method="get" id="cancelForm"
+                                                class="cancelForm">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-danger">Cancel Reservation</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% });} %>
+                                <% if (bookings.length!==0) { %>
+                                    <div class="col mx-auto col-md-6 col-lg-4 d-flex justify-content-center align-items-center">
+                                        <button title="Add" class="cssbuttons-io-button"
+                                            onclick="window.location.href='/book'">
+                                            <svg height="25" width="25" viewBox="0 0 24 24"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M0 0h24v24H0z" fill="none"></path>
+                                                <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" fill="currentColor"></path>
+                                            </svg>
+                                            <span>Add</span>
+                                        </button>
+                                    </div>
+                                    <% } %>
+
+            </div>
+        </div>
+
+
+    </main>
+
+
+    <footer>
+        <!-- Upper -->
+        <div class="upper-footer">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col d-flex flex-column align-items-center  p-5">
+                        <div class="partners">
+                            <h2 class="partner-heading">Our Partners</h2>
+                            <ul>
+                                <li>
+                                    Millennial Brew
+                                </li>
+                                <li>
+                                    The Minimalist
+                                </li>
+                                <li>
+                                    Instagrammable Eats
+                                </li>
+                                <li>
+                                    Aesthetic Café
+                                </li>
+                                <li>
+                                    Modern Mug
+                                </li>
+                                <li>
+                                    The Social Sip
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col d-flex flex-column align-items-center  p-5">
+                        <div class="social-links">
+                            <h2 class="soical-links-heading">Connect with US</h2>
+                            <div class="links">
+                                <button>
+                                    <i class="fa-brands fa-instagram"></i>
+                                </button>
+
+                                <button>
+                                    <i class="fa-brands fa-facebook"></i>
+                                </button>
+
+                                <button>
+                                    <i class="fa-brands fa-twitter"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col d-flex flex-column align-items-center  p-5">
+                        <div class="quick-links">
+                            <h2 class="links-heading">Quick Links</h2>
+                            <ul>
+                                <li><a class="quick-link" href="">Privacy Policy</a></li>
+                                <li><a class="quick-link" href="">Terms & Condition</a></li>
+                                <li><a class="quick-link" href="">Help</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Lower -->
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col">
+                    <p class="text-center my-3">
+                        &copy; <span id="year"></span> | All Rights Reserved by <a href="https://ch-ammar.vercel.app/"
+                            class="developer">Ammar</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+        crossorigin="anonymous"></script>
+    <!-- Toastify JS -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <!-- Custom Script -->
+    <script src="/Javascripts/my-booking.js"></script>
+</body>
+
+</html>

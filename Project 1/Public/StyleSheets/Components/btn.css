@@ -1,0 +1,12 @@
+
+/* -------- Buttons --------- */
+
+button.filled {
+  border: 0;
+  width: 150px;
+  height: 61px;
+  background-color: var(--secondary);
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+}

@@ -1,0 +1,91 @@
+footer {
+    background-color: var(--primary);
+}
+
+
+a.developer {
+    color: var(--secondary);
+}
+
+.upper-footer {
+    height: 300px;
+}
+
+.partners ul{
+    line-height: 30px;
+}
+
+.partners ul li {
+    position: relative;
+}
+
+.partners ul li:before {
+    content: "";
+    width: 28%;
+    position: absolute;
+    height: 2px;
+    background: var(--secondary);
+    bottom: 2px;
+    border-radius: 3px;
+}
+
+.partners ul,
+.quick-links ul {
+    list-style: none;
+    padding: 0;
+}
+
+
+/* -- Social Media -- */
+
+
+.social-links .links button {
+    border: 1px solid var(--secondary);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+
+
+.social-links .links button i {
+    color: var(--secondary);
+    transition: all 0.3s ease;
+}
+
+
+
+
+.social-links .links button:hover i {
+    transform: scale(1.5);
+}
+
+
+
+
+/* -- Link -- */
+
+
+
+
+.quick-link {
+    text-decoration: none;
+    color: var(--secondary);
+    position: relative;
+    font-size: 15px;
+}
+
+
+.quick-link::after {
+    content: "";
+    width: 0%;
+    height: 2px;
+    background-color: var(--secondary);
+    position: absolute;
+    display: block;
+    transition: all 0.5s ease;
+}
+
+.quick-link:hover:after {
+    width: 77%;
+}

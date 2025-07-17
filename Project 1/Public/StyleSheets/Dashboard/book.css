@@ -1,0 +1,80 @@
+form.booking-form {
+    background: var(--primary);
+    width: 70%;
+    margin: 30px auto;
+    padding: 30px 40px;
+    border-radius: 10px;
+}
+
+
+button.book-button {
+    width: 100px;
+    height: 40px;
+}
+
+/* Date Timer picker */
+
+
+.picker-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.picker-container h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.picker-container input {
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.picker-container button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.picker-container button:hover {
+    background-color: #0056b3;
+}
+
+.count{
+    width: 50%;
+}
+
+/* Reset input number styles */
+.count::-webkit-outer-spin-button,
+.form.control::-webkit-outer-spin-button,
+.form.control::-webkit-inner-spin-button,
+.count::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  display: none;
+  margin: 0;
+}
+
+.count[type=number],
+.form-control[type=number]
+ {
+  -moz-appearance: textfield;
+}
+
+
+@media screen and (max-width:500px) {
+    form.booking-form{
+        width: 100%;
+    }
+}

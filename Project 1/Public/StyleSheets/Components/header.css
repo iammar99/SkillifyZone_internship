@@ -1,0 +1,101 @@
+header {
+  background-color: var(--primary);
+}
+
+
+
+/* poster */
+
+.container-fluid.poster {
+  height: 565px;
+  padding: 0px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  position: relative;
+  background: var(--primary);
+}
+
+.poster-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.poster-text h1 {
+  font-weight: 700;
+  text-align: left;
+  color: #000000;
+  text-align: center;
+  font-family: math;
+}
+
+.poster-text p {
+  text-align: left;
+  font-size: 15px;
+  width: 73%;
+  margin: auto;
+}
+
+@media screen and (max-width:400px) {
+  .poster-text h1 {
+    font-size: 45px;
+  }
+
+  .poster-text p {
+    font-size: 15px;
+  }
+
+}
+
+
+/* Navbar */
+
+nav.navbar.navbar-expand-lg {
+  width: 70%;
+  margin: auto;
+  background-color: var(--primary);
+}
+
+/* -------- Navlinks --------- */
+
+
+nav.navbar.navbar-expand-lg a.nav-link {
+  text-decoration: none;
+  color: black;
+  position: relative;
+  font-size: 15px;
+}
+
+
+nav.navbar.navbar-expand-lg a.nav-link::after {
+  content: "";
+  width: 0%;
+  height: 2px;
+  background-color: black;
+  position: absolute;
+  left: 7px;
+  bottom: 8px;
+  display: block;
+  transition: all 0.5s ease;
+}
+
+nav.navbar.navbar-expand-lg a.nav-link:hover:after {
+  width: 77%;
+}
+
+
+
+/* Media Queries */
+
+
+@media screen and (max-width:550px) {
+  .poster img {
+    display: none;
+  }
+  nav.navbar.navbar-expand-lg{
+    width: 100%;
+  }
+}

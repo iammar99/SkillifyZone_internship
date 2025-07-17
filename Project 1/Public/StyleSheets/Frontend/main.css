@@ -1,0 +1,31 @@
+:root {
+    --primary: #dbd2c6;
+    --secondary: #ba8c56;
+    --text: #D4A574;
+    --accent: #F5F5DC;
+}
+
+
+* {
+    margin: 0%;
+    padding: 0px;
+    box-sizing: border-box;
+}
+
+
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.headings {
+    color: var(--secondary);
+    font-weight: 900;
+    font-size: 50px;
+}

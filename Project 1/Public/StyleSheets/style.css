@@ -1,0 +1,9 @@
+@import "./Frontend/main.css";
+@import "./Components/footer.css";
+@import "./Components/header.css";
+@import "./Components/btn.css";
+@import "./Components/addReservationBtn.css";
+@import "./Auth/login.css";
+@import "./Frontend/about.css";
+@import "./Frontend/reviews.css";
+@import "./Dashboard/book.css";
