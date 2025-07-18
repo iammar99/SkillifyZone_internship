@@ -143,14 +143,21 @@
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">Time</label>
-                                                    <% // Convert time from "hh:mm AM/PM" to "HH:mm" (24-hour) const
-                                                        [timeString, modifier]=booking.time.split(' ');
-                                                        let [hours, minutes] = timeString.split(' :'); if
-                                                        (modifier==='PM' && hours !=='12' ) hours=parseInt(hours) + 12;
-                                                        if (modifier==='AM' && hours==='12' ) hours='00' ; const
-                                                        time24=`${String(hours).padStart(2, '0' )}:${minutes}`; %>
+                                                        <%
+                                                            // Assume booking.time is like "09:30 AM" or "3:05 PM"
+                                                            const [timeString, modifier] = booking.time.split(' ');
+                                                            let [hours, minutes] = timeString.split(':');
+
+                                                            hours = parseInt(hours);
+                                                            if (modifier === 'PM' && hours !== 12) hours += 12;
+                                                            if (modifier === 'AM' && hours === 12) hours = 0;
+
+                                                            const time24 = `${String(hours).padStart(2, '0')}:${minutes}`;
+                                                        %>
+
                                                         <input type="time" name="time" class="form-control"
                                                             value="<%= time24 %>" required>
+
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">Guest Count</label>
@@ -209,26 +216,26 @@
                                 </div>
                             </div>
                             <% });} %>
-                                <% if (bookings.length!==0) { %>
-                                    <div
-                                        class="col mx-auto col-md-6 col-lg-4 d-flex justify-content-center align-items-center">
-                                        <button title="Add" class="cssbuttons-io-button"
-                                            onclick="window.location.href='/book'">
-                                            <svg height="25" width="25" viewBox="0 0 24 24"
-                                                xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M0 0h24v24H0z" fill="none"></path>
-                                                <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" fill="currentColor"></path>
-                                            </svg>
-                                            <span>Add</span>
-                                        </button>
-                                    </div>
-                                    <% } %>
 
-                                        <p class="text-center mb-0 mt-5" style="font-size: 20px;">
-                                            We have <span style="font-weight: 700;">
-                                                <%= bookings.length %>
-                                            </span> bookings in total.
-                                        </p>
+                <% 
+                    // Get today's date in YYYY-MM-DD format
+                    const today = new Date().toISOString().split('T')[0];
+
+                    // Filter bookings to only those for today
+                    const todaysBookings = bookings.filter(b => {
+                        const bookingDate = new Date(b.date).toISOString().split('T')[0];
+                        return bookingDate === today;
+                    });
+                %>
+
+                <p class="text-center mb-0 mt-5" style="font-size: 20px;">
+                    We have <span style="font-weight: 700;">
+                        <%= bookings.length %>
+                    </span> bookings in total, and <span style="font-weight: 700;">
+                        <%= todaysBookings.length %>
+                    </span> for today.
+                </p>
+
 
             </div>
         </div>

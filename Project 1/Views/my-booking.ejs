@@ -141,12 +141,18 @@
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label">Time</label>
-                                                    <% // Convert time from "hh:mm AM/PM" to "HH:mm" (24-hour) const
-                                                        [timeString, modifier]=booking.time.split(' ');
-                                                        let [hours, minutes] = timeString.split(' :'); if
-                                                        (modifier==='PM' && hours !=='12' ) hours=parseInt(hours) + 12;
-                                                        if (modifier==='AM' && hours==='12' ) hours='00' ; const
-                                                        time24=`${String(hours).padStart(2, '0' )}:${minutes}`; %>
+                                                        <%
+                                                            // Assume booking.time is like "09:30 AM" or "3:05 PM"
+                                                            const [timeString, modifier] = booking.time.split(' ');
+                                                            let [hours, minutes] = timeString.split(':');
+
+                                                            hours = parseInt(hours);
+                                                            if (modifier === 'PM' && hours !== 12) hours += 12;
+                                                            if (modifier === 'AM' && hours === 12) hours = 0;
+
+                                                            const time24 = `${String(hours).padStart(2, '0')}:${minutes}`;
+                                                        %>
+
                                                         <input type="time" name="time" class="form-control"
                                                             value="<%= time24 %>" required>
                                                 </div>
