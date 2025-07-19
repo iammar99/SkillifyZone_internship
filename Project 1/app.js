@@ -4,6 +4,7 @@ const path = require("path")
 // ------------------ Models------------------
 const user = require("./Models/UserModel")
 const booking = require("./Models/booking")
+const review = require("./Models/review")
 // ------------------ Packages ------------------
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
@@ -28,6 +29,8 @@ async function isLoggedIn(req, res, next) {
         req.user = data
         const findUser = await user.findById(data.id)
         req.user.role = findUser.role
+        req.user.username = findUser.username
+        console.log(req.user)
     }
     next()
 }
@@ -47,11 +50,12 @@ app.get("/", async (req, res) => {
                 role = findUser.role;
             }
         }
+        var reviews = await review.find()
     } catch (err) {
         console.error("Token verification failed:", err.message);
     }
 
-    res.render("index", { token, role });
+    res.render("index", { token, role, reviews });
 
 })
 
@@ -71,8 +75,9 @@ app.get("/book", isLoggedIn, async (req, res) => {
     res.render("book", { token, role: findUser.role })
 })
 
-app.get("/review", (req, res) => {
-    res.send("review",)
+app.get("/review", isLoggedIn, async (req, res) => {
+    const token = req.cookies.token
+    res.render("reviews", { token, role: req.user.role })
 })
 
 app.get("/my-booking", isLoggedIn, async (req, res) => {
@@ -90,7 +95,10 @@ app.get("/admin", isLoggedIn, async (req, res) => {
     res.render("admin", { token, role: user.role, bookings })
 })
 
-
+app.get("/delete/:id", async (req, res) => {
+    const deletedReview = await review.findByIdAndDelete(req.params.id)
+    res.redirect("/")
+})
 
 
 app.get("/cancel/:id", async (req, res) => {
@@ -216,6 +224,18 @@ app.post("/edit/:id", async (req, res) => {
     res.json({
         success: true
     })
+})
+
+app.post("/review", isLoggedIn, async (req, res) => {
+    const reviewCreated = review.create({
+        user: req.user.username,
+        rating: parseInt(req.body.rating),
+        review: req.body.reviewText
+    })
+    res.json({
+        success: true
+    })
+    console.log(reviewCreated)
 })
 
 

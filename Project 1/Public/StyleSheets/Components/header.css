@@ -25,13 +25,13 @@ header {
 }
 
 .poster-text h1 {
-  font-weight: 700;
-  text-align: left;
-  color: #000000;
-  text-align: center;
-  font-family: math;
+    font-weight: 700;
+    text-align: left;
+    color: #000000;
+    text-align: justify;
+    font-family: math;
+    width: 304px;
 }
-
 .poster-text p {
   text-align: left;
   font-size: 15px;
@@ -39,7 +39,7 @@ header {
   margin: auto;
 }
 
-@media screen and (max-width:400px) {
+@media screen and (max-width:500px) {
   .poster-text h1 {
     font-size: 45px;
   }
@@ -91,7 +91,7 @@ nav.navbar.navbar-expand-lg a.nav-link:hover:after {
 /* Media Queries */
 
 
-@media screen and (max-width:550px) {
+@media screen and (max-width:500px) {
   .poster img {
     display: none;
   }
