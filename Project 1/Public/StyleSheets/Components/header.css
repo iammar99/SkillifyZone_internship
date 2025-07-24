@@ -30,7 +30,8 @@ header {
     color: #000000;
     text-align: justify;
     font-family: math;
-    width: 304px;
+    /* width: 304px; */
+    margin: auto;
 }
 .poster-text p {
   text-align: left;
@@ -91,7 +92,7 @@ nav.navbar.navbar-expand-lg a.nav-link:hover:after {
 /* Media Queries */
 
 
-@media screen and (max-width:500px) {
+@media screen and (max-width:600px) {
   .poster img {
     display: none;
   }
