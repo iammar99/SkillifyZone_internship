@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken")
 const cookieParser = require("cookie-parser")
 // ----------- Models -----------
 const user = require("./Models/userModel")
+const event = require("./Models/eventModel")
 // ----------- ENV -----------
 require('dotenv').config();
 
@@ -29,10 +30,69 @@ app.get("/logout", async (req, res) => {
         httpOnly: true,
         sameSite: "Lax",
         secure: false,
-        path:"/"
+        path: "/"
     });
     console.log(req.cookies.token)
     res.json({ message: "Logged out successfully", success: true })
+})
+
+
+
+app.get("/getEvents", async (req, res) => {
+    const token = req.cookies.token
+    const data = jwt.verify(token, process.env.JWT_SECRET)
+    try {
+        const events = await event.find({ user: data.id })
+        res.json({
+            success: true,
+            data: events,
+        })
+    } catch (error) {
+        console.log(error)
+        res.json({
+            success: false,
+            data: [],
+        })
+    }
+})
+
+
+app.get("/getEvents-admin", async (req, res) => {
+    const token = req.cookies.token
+    const data = jwt.verify(token, process.env.JWT_SECRET)
+    try {
+        const events = await event.find()
+        res.json({
+            success: true,
+            data: events,
+        })
+    } catch (error) {
+        console.log(error)
+        res.json({
+            success: false,
+            data: [],
+        })
+    }
+})
+
+
+app.get("/deleteEvent/:id", async (req, res) => {
+    try {
+        const deletedEvent = await event.findByIdAndDelete(req.params.id);
+        const userFound = await user.findOne({ _id: deletedEvent.user })
+        userFound.events.splice(userFound.events.indexOf(deletedEvent._id), 1);
+        userFound.save()
+        res.json({
+            success: true,
+            message: "Deleted Successfully"
+        })
+    } catch (error) {
+        console.log(error)
+        res.json({
+            success: false,
+            message: "Something went wrong"
+        })
+    }
 })
 
 
@@ -54,8 +114,7 @@ app.post("/login", async (req, res) => {
                 res.json({
                     success: true,
                     message: "Logged In",
-                    username: userFound.username,
-                    id: userFound._id
+                    user: userFound
                 })
             }
             else {
@@ -115,6 +174,61 @@ app.post("/register", async (req, res) => {
                 message: "Something Went Wrong"
             })
         }
+    }
+})
+
+
+app.post("/create", async (req, res) => {
+    try {
+        const token = req.cookies.token
+        const data = jwt.verify(token, process.env.JWT_SECRET)
+        const userFound = await user.findOne({ email: data.email })
+        const createdEvent = await event.create({
+            name: req.body.eventName,
+            description: req.body.eventDescription,
+            date: req.body.formattedDate,
+            time: req.body.formattedTime,
+            user: userFound._id,
+            organizer: req.body.organizerName,
+            location: req.body.eventLocation
+        })
+        userFound.events.push(createdEvent._id)
+        userFound.save()
+        res.json({
+            success: true,
+            message: "Event Successfully created"
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Something Went Wrong"
+        })
+    }
+})
+
+
+app.post("/updateEvent/:id", async (req, res) => {
+
+    try {
+        const foundEvent = await event.findOne({_id:req.params.id})
+        foundEvent.name = req.body.name
+        foundEvent.description = req.body.description
+        foundEvent.date = req.body.date
+        foundEvent.time = req.body.time
+        foundEvent.organizer = req.body.organizer
+        foundEvent.location = req.body.location
+        foundEvent.save()
+        res.json({
+            success: true,
+            message: "Updated Successfully",
+            data :foundEvent 
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Something went wrong",
+            data : {}
+        })
     }
 })
 
