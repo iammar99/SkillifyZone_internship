@@ -1,0 +1,118 @@
+
+section#about {
+    padding: 100px 0;
+}
+
+
+section#reviews {
+    padding: 50px 0;
+}
+
+
+
+
+h1.about-heading,h1.review-heading {
+    font-weight: 900;
+    font-size: 60px;
+}
+
+p.about-text{
+    font-size: 24px;
+}
+
+.review-card {
+  background-color: #d6e2f5;
+  color: #333f4c;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+margin: 0 auto 30px auto;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.user-info h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333f4c;
+}
+
+.user-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.review-body p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #333f4c;
+  margin: 0;
+}
+
+
+
+button.filled-btn {
+    width: 176px;
+    height: 56px;
+    border: 0;
+    background: $secondaryColor;
+    position: relative;
+    color: white;
+    z-index: 1
+}
+
+
+button.filled-btn:before {
+    content: "";
+    width: 0%;
+    height: 56px;
+    background: $accent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: all 0.7s ease;
+    z-index: -1;
+}
+
+button.filled-btn:hover::before {
+    width: 100%;
+}
+
+
+p.more-text{
+    // font-size: 31px;
+    // padding: 0px;
+}
+
+
+
+
+@media screen and (max-width:1199px) {
+    p.about-text{
+        font-size: 20px;
+    }
+}
+
+
+
+@media screen and (max-width:999px) {
+    p.about-text{
+        font-size: 15px;
+    }
+}
