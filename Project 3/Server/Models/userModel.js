@@ -1,21 +1,49 @@
 const mongoose = require("mongoose")
 
-mongoose.connect("mongodb://localhost:27017/Eventora")
+mongoose.connect("mongodb://localhost:27017/Luxefits")
 
 
 const userSchema = mongoose.Schema({
     email: String,
     username: String,
+    firstName: String,
+    lastName: String,
     password: String,
-    events: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Event"
-    }],
+    contact: String,
+    profileImg: {
+        type: Buffer,
+        default: "default.png"
+    },
     role: {
         type: String,
         default: "user"
+    },
+    cart: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product"
+    }],
+    orders: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Order"
+    }],
+    address: {
+        address: {
+            type: String
+        },
+        city: {
+            type: String
+        },
+        state: {
+            type: String
+        },
+        zipCode: {
+            type: String
+        },
+        country: {
+            type: String
+        },
     }
-})
+}, { timestamps: true })
 
 
 const userModel = mongoose.model("User", userSchema)

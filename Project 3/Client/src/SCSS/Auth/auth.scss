@@ -1,6 +1,6 @@
-form {
+form.auth-form {
     width: 60%;
-    background: $primaryColor;
+    background: white;
     margin: auto;
     padding: 30px 50px;
     border-radius: 10px;
@@ -8,7 +8,7 @@ form {
 
 main.form-body {
     display: flex;
-    background-color: #333f4c;
+    background-color: $primaryColor;
     flex-direction: column;
 }
 

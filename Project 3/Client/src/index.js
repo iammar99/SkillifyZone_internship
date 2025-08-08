@@ -4,6 +4,11 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import AuthContextProvider from 'Context/AuthContext';
+import DetailContextProvider from 'Context/DetailContext';
+import CartContextProvider from 'Context/CartContext';
+import CheckOutContextProvider from 'Context/CheckOutContext';
+import ProfileImageContextProvider from 'Context/ProfileImageContext';
+import ProfileContextProvider from 'Context/ProfileContext';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -11,7 +16,17 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthContextProvider>
-        <App />
+        <DetailContextProvider>
+          <CartContextProvider>
+            <CheckOutContextProvider>
+              <ProfileImageContextProvider>
+                <ProfileContextProvider>
+                  <App />
+                </ProfileContextProvider>
+              </ProfileImageContextProvider>
+            </CheckOutContextProvider>
+          </CartContextProvider>
+        </DetailContextProvider>
       </AuthContextProvider>
     </BrowserRouter>
   </React.StrictMode>

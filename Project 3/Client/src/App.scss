@@ -1,7 +1,8 @@
 // -------------- Colors --------------
-$primaryColor:#d6e2f5;
-$secondaryColor:#333f4c;
-$accent:#b1c9f1;
+$primaryColor:#e2e8f0;
+$secondaryColor:#6c7c8f;
+$accent:#84a3b8;
+$text:#44607a;
 // -------------- Components --------------
 @import './SCSS/Components/bootstrap';
 @import './SCSS/Components/ScreenLoader';
@@ -9,11 +10,15 @@ $accent:#b1c9f1;
 @import './SCSS/Components/header.scss';
 @import './SCSS/Components/productLoader.scss';
 @import './SCSS/Components/addBtn.scss';
+@import './SCSS/Components/productsCard.scss';
+@import './SCSS/Components/invoiceGenerator.scss';
 // -------------- Auth --------------
 @import './SCSS/Auth/auth.scss';
 // -------------- Dashboard --------------
-@import "./SCSS/Dashboard/create-event.scss";
-@import "./SCSS/Dashboard/my-events.scss";
+@import "./SCSS/Dashboard/cart.scss";
+@import "./SCSS/Dashboard/checkout.scss";
+@import "./SCSS/Dashboard/admin.scss";
+@import "./SCSS/Dashboard/profile.scss";
 // -------------- Frontend --------------
 @import "./SCSS/Frontend/home.scss";
 
@@ -28,3 +33,6 @@ main{
     flex: 1 0 auto;
 }
 
+li{
+    list-style: none;
+}

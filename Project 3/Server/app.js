@@ -7,9 +7,14 @@ const jwt = require("jsonwebtoken")
 const cookieParser = require("cookie-parser")
 // ----------- Models -----------
 const user = require("./Models/userModel")
-const event = require("./Models/eventModel")
+const product = require("./Models/productModel")
+const order = require("./Models/orderModel")
 // ----------- ENV -----------
 require('dotenv').config();
+// ----------- Config -----------
+const upload = require("./config/multerConfig")
+const req = require("express/lib/request")
+
 
 
 
@@ -19,6 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
     origin: "http://localhost:3000",
+    methods: ["GET, POST, PUT, DELETE"],
     credentials: true
 }));
 app.use(cookieParser())
@@ -37,65 +43,208 @@ app.get("/logout", async (req, res) => {
 })
 
 
-
-app.get("/getEvents", async (req, res) => {
-    const token = req.cookies.token
-    const data = jwt.verify(token, process.env.JWT_SECRET)
+app.get("/admin/viewProducts", async (req, res) => {
     try {
-        const events = await event.find({ user: data.id })
+        const products = await product.find({})
+        const productsWithImage = products.map(product => {
+            const imgBase64 = product.img.toString('base64');
+            const imgSrc = `data:image/png;base64,${imgBase64}`;
+
+            return {
+                ...product._doc,
+                img: imgSrc,
+            };
+        });
         res.json({
             success: true,
-            data: events,
+            data: productsWithImage
         })
     } catch (error) {
-        console.log(error)
         res.json({
             success: false,
-            data: [],
+            message: "Some Error Occured"
         })
+        console.log(error)
+    }
+})
+
+// For Home Page
+
+app.get("/home/viewProducts/:category", async (req, res) => {
+    try {
+        const products = await product.find({ category: req.params.category })
+        const productsWithImage = products.map(product => {
+            const imgBase64 = product.img.toString('base64');
+            const imgSrc = `data:image/png;base64,${imgBase64}`;
+
+            return {
+                ...product._doc,
+                img: imgSrc,
+            };
+        });
+        res.json({
+            success: true,
+            data: productsWithImage
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Some Error Occured"
+        })
+        console.log(error)
+    }
+})
+
+// For Other  Page
+
+app.get("/viewProducts/:category", async (req, res) => {
+    try {
+        const products = await product.find({ category: req.params.category })
+        const productsWithImage = products.map(product => {
+            const imgBase64 = product.img.toString('base64');
+            const imgSrc = `data:image/png;base64,${imgBase64}`;
+
+            return {
+                ...product._doc,
+                img: imgSrc,
+            };
+        });
+        res.json({
+            success: true,
+            data: productsWithImage
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Some Error Occured"
+        })
+        console.log(error)
     }
 })
 
 
-app.get("/getEvents-admin", async (req, res) => {
-    const token = req.cookies.token
-    const data = jwt.verify(token, process.env.JWT_SECRET)
+
+app.get("/cart/get/:id", async (req, res) => {
     try {
-        const events = await event.find()
+        const foundUser = await user.findById(req.params.id).populate('cart')
+        const productsWithImage = foundUser.cart.map(product => {
+            const imgBase64 = product.img.toString('base64');
+            const imgSrc = `data:image/png;base64,${imgBase64}`;
+
+            return {
+                ...product._doc,
+                img: imgSrc,
+            };
+        });
         res.json({
-            success: true,
-            data: events,
+            message: "Data Sent Successfully",
+            data: productsWithImage
         })
     } catch (error) {
-        console.log(error)
         res.json({
-            success: false,
-            data: [],
-        })
-    }
-})
-
-
-app.get("/deleteEvent/:id", async (req, res) => {
-    try {
-        const deletedEvent = await event.findByIdAndDelete(req.params.id);
-        const userFound = await user.findOne({ _id: deletedEvent.user })
-        userFound.events.splice(userFound.events.indexOf(deletedEvent._id), 1);
-        userFound.save()
-        res.json({
-            success: true,
-            message: "Deleted Successfully"
-        })
-    } catch (error) {
-        console.log(error)
-        res.json({
-            success: false,
             message: "Something went wrong"
         })
     }
 })
 
 
+
+app.get("/cart/:user/remove/:id", async (req, res) => {
+    try {
+        const userFound = await user.findById(req.params.user)
+        userFound.cart.splice(userFound.cart.indexOf(req.params.id), 1);
+        userFound.save()
+        res.json({
+            message: "Removed from cart"
+        })
+    } catch (error) {
+        console.log(error)
+        res.json({
+            message: "Something went wrong"
+        })
+    }
+})
+
+
+app.get("/profile/user/:id", async (req, res) => { 
+    try {
+        const userFound = await user.findById(req.params.id)
+            .populate({
+                path: 'orders',
+                populate: {
+                    path: 'items.id',
+                    model: 'Product' 
+                }
+            });
+            
+        let userImgSrc = null;
+        if (userFound.profileImg) {
+            const imgBase64 = userFound.profileImg.toString('base64'); 
+            userImgSrc = `data:image/png;base64,${imgBase64}`; 
+        }
+
+        const ordersWithImages = userFound.orders.map(order => {
+            const itemsWithImages = order.items.map(orderItem => {
+                let itemImgSrc = null;
+                
+                if (orderItem.id && orderItem.id.img) {
+                    const imgBase64 = orderItem.id.img.toString('base64');
+                    itemImgSrc = `data:image/png;base64,${imgBase64}`;
+                }
+
+                return {
+                    ...orderItem._doc,
+                    id: orderItem.id ? {
+                        ...orderItem.id._doc,
+                        img: itemImgSrc
+                    } : orderItem.id
+                };
+            });
+
+            return {
+                ...order._doc,
+                items: itemsWithImages
+            };
+        });
+
+        const processedUser = {
+            ...userFound._doc,
+            orders: ordersWithImages
+        };
+        
+        res.json({ 
+            data: processedUser, 
+            img: userImgSrc, 
+            success: true, 
+            message: "Data fetched successfully" 
+        });
+    } catch (error) {
+        console.error(error);
+        res.json({ 
+            success: false, 
+            message: "Something went wrong" 
+        });
+    } 
+});
+
+
+app.get("/navImage/user/:id", async (req, res) => {
+    const userFound = await user.findById(req.params.id)
+    const imgBase64 = userFound.profileImg.toString('base64');
+    const imgSrc = `data:image/png;base64,${imgBase64}`;
+    try {
+        res.json({
+            img: imgSrc,
+            success: true,
+            message: "Nothing went wrong"
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Something went wrong"
+        })
+    }
+})
 // ----------- Post -----------
 
 
@@ -128,7 +277,7 @@ app.post("/login", async (req, res) => {
     else {
         res.json({
             success: false,
-            message: "No User Found with such User"
+            message: "No User Found with such Email Address"
         })
     }
     console.log(userFound)
@@ -178,27 +327,91 @@ app.post("/register", async (req, res) => {
 })
 
 
-app.post("/create", async (req, res) => {
+
+app.post('/add-products', upload.single('img'), async (req, res) => {
     try {
-        const token = req.cookies.token
-        const data = jwt.verify(token, process.env.JWT_SECRET)
-        const userFound = await user.findOne({ email: data.email })
-        const createdEvent = await event.create({
-            name: req.body.eventName,
-            description: req.body.eventDescription,
-            date: req.body.formattedDate,
-            time: req.body.formattedTime,
-            user: userFound._id,
-            organizer: req.body.organizerName,
-            location: req.body.eventLocation
+        const { name, category, price, oldPrice, bg, panelBg, description } = req.body;
+        const imgBuffer = req.file.buffer;
+
+        console.log(req.file.buffer);
+        const newProduct = await product.create({
+            name,
+            description,
+            category,
+            price,
+            oldPrice: oldPrice || null,
+            bg,
+            panelBg,
+            img: imgBuffer,
+        });
+
+
+        res.json({ success: true, message: 'Product added successfully', productId: newProduct._id });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Failed to upload product' });
+    }
+});
+
+
+app.post("/add-to-cart", async (req, res) => {
+    try {
+        const foundUser = await user.findById(req.body.userid);
+        foundUser.cart.push(req.body.productId)
+        foundUser.save()
+        res.json({
+            message: "Added to cart"
         })
-        userFound.events.push(createdEvent._id)
+    } catch (error) {
+        res.json({
+            message: "Something went wrong"
+        })
+    }
+})
+
+
+app.post("/orders/create", async (req, res) => {
+    try {
+        const userNewData = req.body.billingInfo
+        const orderCreated = await order.create(req.body)
+        const userFound = await user.findById(req.body.userId)
+        userFound.orders.push(orderCreated._id)
+        userFound.firstName = userNewData.firstName
+        userFound.lastName = userNewData.lastName
+        userFound.contact = userNewData.phone
+        userFound.address.address = userNewData.address
+        userFound.address.city = userNewData.city
+        userFound.address.state = userNewData.state
+        userFound.address.zipCode = userNewData.zipCode
+        userFound.address.country = userNewData.country
+        userFound.cart = []
         userFound.save()
         res.json({
             success: true,
-            message: "Event Successfully created"
+            message: "Order Done"
         })
     } catch (error) {
+        console.log(error)
+        res.json({
+            success: false,
+            message: "Something Went wrong"
+        })
+    }
+})
+
+
+app.post("/profile/:id/img", upload.single("profile"), async (req, res) => {
+    try {
+        // const imgBuffer = req.file.buffer;
+        const userFound = await user.findById(req.params.id)
+        userFound.profileImg = req.file.buffer
+        userFound.save()
+        res.json({
+            success: true,
+            message: "Nothing Went Wrong"
+        })
+    } catch (error) {
+        console.error(error)
         res.json({
             success: false,
             message: "Something Went Wrong"
@@ -207,31 +420,54 @@ app.post("/create", async (req, res) => {
 })
 
 
-app.post("/updateEvent/:id", async (req, res) => {
-
+app.post("/profile/update/:id", async (req, res) => {
     try {
-        const foundEvent = await event.findOne({_id:req.params.id})
-        foundEvent.name = req.body.name
-        foundEvent.description = req.body.description
-        foundEvent.date = req.body.date
-        foundEvent.time = req.body.time
-        foundEvent.organizer = req.body.organizer
-        foundEvent.location = req.body.location
-        foundEvent.save()
+        const userFound = await user.findById(req.params.id)
+        userFound.firstName = req.body.firstName,
+            userFound.lastName = req.body.lastName,
+            userFound.contact = req.body.contact,
+            userFound.email = req.body.email
+        userFound.save()
         res.json({
             success: true,
-            message: "Updated Successfully",
-            data :foundEvent 
+            message: "Profile Updated"
         })
     } catch (error) {
         res.json({
             success: false,
-            message: "Something went wrong",
-            data : {}
+            message: "Somthing went wrong"
         })
     }
 })
 
 
+app.post("/profile/updatePassword/:id", async (req, res) => {
+    try {
+        const userFound = await user.findById(req.params.id)
+        bcrypt.compare(req.body.oldPassword, userFound.password, function (err, result) {
+            if (!result) {
+                res.json({
+                    success: false,
+                    message: "Wrong old password"
+                })
+            } else {
+                bcrypt.hash(req.body.newPassword, 10, function (err, hash) {
+                    userFound.password = hash
+                    userFound.save()
+                });
+                res.json({
+                    success: true,
+                    message: "Updated Password"
+                })
+            }
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Something went Wrong"
+        })
+        console.log(error)
+    }
+})
 
 app.listen("8000")

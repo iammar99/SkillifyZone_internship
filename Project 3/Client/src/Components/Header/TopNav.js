@@ -1,14 +1,15 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import logo from "../../Assets/logo.png"
-import { Link } from 'react-router-dom'
+import img from "../../Assets/default.png"
+import { Link, NavLink } from 'react-router-dom'
 import { useAuthContext } from 'Context/AuthContext'
 import { message } from 'antd'
+import { useProfileImageContext } from 'Context/ProfileImageContext'
 
 export default function TopNav() {
-
   const { isAuth, setIsAuth, user } = useAuthContext()
   const [isLoading, setIsLoading] = useState(false)
-
+  const {profileImg} = useProfileImageContext()
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -30,14 +31,14 @@ export default function TopNav() {
     setIsLoading(false)
   }
 
-
   return (
     <>
-      <nav className="navbar navbar-expand-lg " style={{ "background": "#d6e2f5" }}>
+      <nav className="navbar navbar-expand-lg" style={{ backgroundColor: '#e2e8f0', padding: "0" }}>
         <div className="container-fluid">
-          <Link className="navbar-brand" href="#" >
-            <img src={logo} alt="" style={{ "width": "70px" }} />
+          <Link className="navbar-brand d-flex align-items-center" href="#">
+            <img src={logo} style={{ "width": "70px" }} alt="" />
           </Link>
+
           <button
             className="navbar-toggler"
             type="button"
@@ -49,55 +50,102 @@ export default function TopNav() {
           >
             <span className="navbar-toggler-icon" />
           </button>
-          <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <Link className="nav-link active" aria-current="page" to={"/"}>
-                  Home
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link active" aria-current="page" to={"/dashboard/my-events"}>
-                  My Events
-                </Link>
-              </li>
-              {
-                user.role == "admin"
-                  ?
 
-                  <li className="nav-item">
-                    <Link className="nav-link active" aria-current="page" to={"/dashboard/admin"}>
-                      Dashboard
-                    </Link>
-                  </li>
-                  :
-                  <></>
-              }
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            {/* Center Navigation Links */}
+            <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
+              <li className="nav-item mx-2">
+                <NavLink
+                  className={({ isActive }) => `nav-link px-0 ${isActive ? 'active' : ''}`}
+                  to={"/"}
+                >
+                  Home
+                </NavLink>
+              </li>
+
+              <li className="nav-item mx-2">
+                <NavLink
+                  className={({ isActive }) => `nav-link px-0 ${isActive ? 'active' : ''}`}
+                  to={"/men"}
+                >
+                  Men
+                </NavLink>
+              </li>
+
+              <li className="nav-item mx-2">
+                <NavLink
+                  className={({ isActive }) => `nav-link px-0 ${isActive ? 'active' : ''}`}
+                  to={"/women"}
+                >
+                  Women
+                </NavLink>
+              </li>
+
+              <li className="nav-item mx-2">
+                <NavLink
+                  className={({ isActive }) => `nav-link px-0 ${isActive ? 'active' : ''}`}
+                  to={"/kid"}
+                >
+                  Kids
+                </NavLink>
+              </li>
+
+              {user.role === "admin" && (
+                <li className="nav-item">
+                  <NavLink
+                    className={({ isActive }) => `nav-link  me-4 ${isActive ? 'active' : ''}`}
+                    to={"/dashboard/admin"}
+                  >
+                    Dashboard
+                  </NavLink>
+                </li>
+              )}
             </ul>
-            {
-              !isAuth
-                ?
-                <Link className="btn btn-outline-success" to={'/auth/'} >
+
+            {/* Right Side Icons and Auth */}
+            <div className="d-flex align-items-center">
+              {/* Shopping Bag Icon */}
+              {user.role !== "admin" && (
+                <li className="nav-item">
+                  <Link to={"/dashboard/cart"} className="btn btn-link text-muted p-2 me-3">
+                    <i className="fas fa-shopping-bag fs-5"></i>
+                  </Link>
+                </li>
+              )}
+
+              {/* Auth Section */}
+              {!isAuth ? (
+                <Link className="btn btn-outline-success" to={'/auth/'}>
                   Login
                 </Link>
-                :
-                <button className="btn btn-outline-danger" onClick={handleLogout} >
-                  {
-                    isLoading
-                      ?
-                      <div className="spinner-grow" role="status">
+              ) : (
+                <div className="d-flex align-items-center">
+                  {/* User Profile */}
+                  <div className="me-3">
+                    <Link to={"/dashboard/profile"}>
+                      <img
+                        src={`${user.profile == "default.png" ? img : profileImg}`}
+                        alt="Profile"
+                        className="rounded-circle"
+                        style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                      /></Link>
+                  </div>
+
+                  <button className="btn btn-outline-danger" onClick={handleLogout}>
+                    {isLoading ? (
+                      <div className="spinner-grow spinner-grow-sm" role="status">
                         <span className="visually-hidden">Loading...</span>
                       </div>
-
-                      :
+                    ) : (
                       "Logout"
-                  }
-                </button>
-            }
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>
-
     </>
   )
 }

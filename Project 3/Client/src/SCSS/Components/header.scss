@@ -3,58 +3,45 @@ header{
 }
 
 
-.bottom-nav {
-    background: $primaryColor;
+a.nav-link {
+    color: $secondaryColor;
+    position: relative;
+    padding: 0;
+}
+
+a.nav-link:before {
+    content: "";
+    position: absolute;
+    width: 0%;
+    height: 2px;
+    background: black;
+    bottom: 0;
+    left: 0;
+    transition: all 0.5s ease;
+}
+
+a.nav-link:hover:before {
     width: 100%;
+}
+
+
+.bottom-nav {
     height: 400px;
+    width: 100%;
+    background-image: url(../../Assets/heroImg.jpg);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     position: relative;
 }
 
-
-img.hero-img {
-    width: 250px;
-    margin: auto;
-    display: block;
- }
-
-
- .hero-content{
-    width: 60%;
- }
- 
- .stats-container {
-    min-width: 70%;
-    height: 100px;
+.bottom-nav::before {
+    content: '';
     position: absolute;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 10px;
-    border: 0;
-}
-
-
-.icon{
-    width: 50px;
-    height: 50px;
-    display: flex;
-    justify-content: center;
-    align-items: anchor-center;
-    font-size: 18px;
-    margin: 12px;
-}
-
-
-@media screen and (max-width:500px){
-    .stats-container {
-    width: 95%;
-}
-img.hero-img{
-    display: none;
-}
-     .hero-content{
-        width: 80%;
-     }
-     .bottom-nav {
-    height: 276px;
-}
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3); 
+    z-index: 1;
 }

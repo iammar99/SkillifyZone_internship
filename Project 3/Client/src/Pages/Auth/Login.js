@@ -45,16 +45,17 @@ export default function Login() {
         email: email,
         username: result.user.username,
         id: result.user._id,
-        role:result.user.role
+        role: result.user.role,
+        profile: result.user.profileImg
       }
 
       setIsAuth(true)
       setUser(userData)
-      
+
       localStorage.setItem("token", "true")
       localStorage.setItem("user", JSON.stringify(userData))
     }
-    
+
     else {
       message.error(result.message)
     }
@@ -62,10 +63,10 @@ export default function Login() {
   }
   return (
     <main className='form-body'>
-      <h1 className="text-center text-light mt-5 mb-0" style={{ "fontSize": "70px", "fontWeight": "800" }}>
+      <h1 className="text-center text-dark mt-5 mb-0" style={{ "fontSize": "70px", "fontWeight": "800" }}>
         Login
       </h1>
-      <form>
+      <form className='auth-form'>
         <div className="mb-3">
           <label htmlFor="exampleInputEmail1" className="form-label">
             Email address

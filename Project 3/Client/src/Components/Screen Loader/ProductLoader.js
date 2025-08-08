@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function ProductLoader() {
     return (
-        <main className='d-flex justify-content-center flex-column align-items-center'>
+        <main className='d-flex justify-content-center flex-column align-items-center' style={{"height":"50vh"}}>
             <div className="spinner-grow" role="status">
                 <span className="visually-hidden">Loading...</span>
             </div>

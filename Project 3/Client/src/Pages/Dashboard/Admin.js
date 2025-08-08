@@ -1,387 +1,562 @@
-import { message } from 'antd'
-import ProductLoader from 'Components/Screen Loader/ProductLoader'
-import { useAuthContext } from 'Context/AuthContext'
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { message } from 'antd';
+import ProductCard from 'Components/OtherComponents/ProductCard';
+import React, { useState, useEffect } from 'react';
 
-export default function Admin() {
-    const [events, setEvents] = useState([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [selectedEvent, setSelectedEvent] = useState(null)
-    const [editFormData, setEditFormData] = useState({
-        name: '',
-        description: '',
-        organizer: '',
-        location: '',
-        date: '',
-        time: ''
-    })
-    const { user } = useAuthContext()
+const Admin = () => {
+    const [activeSection, setActiveSection] = useState('add product');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
 
-    // Data fetching
 
-    const fetchData = async () => {
+
+    // ----------------------- Add Products -----------------------
+
+    const [product, setProduct] = useState({})
+
+    const autoResize = (e) => {
+        e.target.style.height = 'auto';
+        e.target.style.height = `${e.target.scrollHeight}px`;
+    }
+
+
+    const handleChange = (e) => {
+        if (e.target.type === 'file') {
+            setProduct({
+                ...product,
+                [e.target.name]: e.target.files[0],
+            });
+        } else {
+            setProduct({ ...product, [e.target.name]: e.target.value })
+        }
+    }
+
+    const handleProductAdd = async (e) => {
+        e.preventDefault()
+        const formData = new FormData();
         try {
-            const response = await fetch("http://localhost:8000/getEvents-admin", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+            const { name, img, category, oldPrice, price, bg, panelBg, description } = product
+            if (!name || !img || !category || !price || !bg || !panelBg || description) {
+                message.error("Please Fill all inputs")
+                return
+            }
+            console.log(img)
+
+            formData.append('name', name);
+            formData.append('category', category);
+            formData.append('price', price);
+            formData.append('oldPrice', oldPrice || '');
+            formData.append('bg', bg);
+            formData.append('panelBg', panelBg);
+            formData.append('img', img);
+            formData.append('description', description);
+
+            const response = await fetch("http://localhost:8000/add-products", {
+                method: "POST",
                 credentials: "include",
-            })
+                body: formData
+            });
+
+
 
             const result = await response.json()
-            setEvents(result.data)
+
+            if (result.success) {
+                message.success(result.message)
+            }
+            else {
+                message.error(result.message)
+            }
         } catch (error) {
-            console.error('Error fetching events:', error)
-        } finally {
-            setIsLoading(false)
+            message.error("Something went wrong")
         }
+        finally {
+            for (let key of formData.keys()) {
+                formData.delete(key);
+            }
+        }
+    }
+
+
+    // ----------------------- View Products -----------------------
+
+    const [products, setProducts] = useState([])
+
+    const fetchData = async () => {
+        const response = await fetch("http://localhost:8000/admin/viewProducts", {
+            method: "GET",
+        })
+        const result = await response.json()
+        setProducts(result.data)
     }
 
     useEffect(() => {
         fetchData()
-    }, [])
-    const [todayEvents, setTodayEvents] = useState([]);
+    }, [activeSection])
+
+
+
+    const colors = {
+        primary: '#e2e8f0',
+        secondary: '#6c7c8f',
+        accent: '#84a3b8',
+        text: '#44607a'
+    };
 
     useEffect(() => {
-        const today = new Date().toLocaleDateString(); 
-        const filteredEvents = events.filter(b => {
-            const eventDate = new Date(b.date).toLocaleDateString(); 
-            return eventDate === today; 
-        });
-        setTodayEvents(filteredEvents); 
-    }, [events]); 
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
 
-    useEffect(() => {
-        console.log(todayEvents); 
-    }, [todayEvents]); 
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const renderContent = () => {
+
+        const contentStyle = {
+            padding: isMobile ? '15px' : '30px',
+            maxWidth: '100%'
+        };
+
+        const cardStyle = {
+            background: colors.primary,
+            padding: isMobile ? '20px' : '40px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(68, 96, 122, 0.1)',
+            border: `1px solid ${colors.primary}`,
+            width: '100%',
+            boxSizing: 'border-box'
+        };
+
+        const titleStyle = {
+            color: colors.text,
+            marginBottom: '30px',
+            fontSize: isMobile ? '20px' : '28px',
+            fontWeight: '300'
+        };
+
+        const textStyle = {
+            color: colors.secondary,
+            fontSize: isMobile ? '14px' : '16px',
+            lineHeight: '1.6'
+        };
+
+        switch (activeSection) {
+            // Add Product
+            case 'add product':
+                return (
+                    <div style={contentStyle}>
+                        <h2 style={titleStyle}>Add New Product</h2>
+                        <div style={cardStyle}>
+                            <p style={textStyle}>
+                                Create and configure new products for your store. Add detailed information, pricing, and inventory details.
+                            </p>
+                            <form className="product-form" encType="multipart/form-data">
+                                <div className="form-wrapper">
+                                    <h2 className="form-heading">Add Product Details</h2>
+                                    <div className="input-group">
+                                        <label htmlFor="productName" className="input-label">
+                                            Product Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            className="input-field"
+                                            id="productName"
+                                            placeholder="Enter product name"
+                                            required=""
+                                            onChange={handleChange}
+                                            name='name'
+                                        />
+                                    </div>
+                                    <div className="form-floating">
+                                        <textarea
+                                            className="form-control"
+                                            placeholder="Leave a comment here"
+                                            id="floatingTextarea"
+                                            defaultValue={""}
+                                            name='description'
+                                            onChange={handleChange}
+                                            onInput={autoResize}
+                                        />
+                                        <label htmlFor="floatingTextarea">Comments</label>
+                                    </div>
+                                    <div className="input-group">
+                                        <label htmlFor="productImage" className="input-label">
+                                            Product Image URL
+                                        </label>
+                                        <input
+                                            type="file"
+                                            className="input-field"
+                                            id="productImage"
+                                            placeholder="Enter image URL"
+                                            required=""
+                                            onChange={handleChange}
+                                            name='img'
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label htmlFor="category" className="input-label">
+                                            Category
+                                        </label>
+                                        <input
+                                            type="text"
+                                            className="input-field"
+                                            id="category"
+                                            placeholder="Enter product category"
+                                            required=""
+                                            onChange={handleChange}
+                                            name='category'
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label htmlFor="price" className="input-label">
+                                            Price
+                                        </label>
+                                        <input
+                                            type="number"
+                                            className="input-field"
+                                            id="price"
+                                            placeholder="Enter product price"
+                                            required=""
+                                            onChange={handleChange}
+                                            name='price'
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label htmlFor="oldPrice" className="input-label">
+                                            Old Price (Optional)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            className="input-field"
+                                            id="oldPrice"
+                                            placeholder="Enter old price (optional)"
+                                            onChange={handleChange}
+                                            name='oldPrice'
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label htmlFor="backgroundColor" className="input-label">
+                                            Background Color
+                                        </label>
+                                        <input
+                                            type="color"
+                                            className="color-picker"
+                                            id="backgroundColor"
+                                            defaultValue="#ffffff"
+                                            onChange={handleChange}
+                                            name='bg'
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label htmlFor="panelBackgroundColor" className="input-label">
+                                            Panel Background Color
+                                        </label>
+                                        <input
+                                            type="color"
+                                            className="color-picker"
+                                            id="panelBackgroundColor"
+                                            defaultValue="#e2e8f0"
+                                            onChange={handleChange}
+                                            name='panelBg'
+                                        />
+                                    </div>
+                                    <button type="submit" className="submit-button" onClick={handleProductAdd}>
+                                        Submit
+                                    </button>
+                                </div>
+                            </form>
 
 
 
-
-    // Handling Edit
-
-
-    const onEdit = (event) => {
-        setSelectedEvent(event)
-        setEditFormData({
-            name: event.name,
-            description: event.description,
-            organizer: event.organizer,
-            location: event.location,
-            date: event.date.split('T')[0], // Format date for input
-            time: event.time
-        })
-    }
-
-
-
-    const handleEditSubmit = async (e) => {
-        e.preventDefault()
-        console.log(selectedEvent)
-        console.log(editFormData)
-        try {
-            const response = await fetch(`http://localhost:8000/updateEvent/${selectedEvent._id}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: "include",
-                body: JSON.stringify(editFormData)
-            })
-
-            const result = await response.json()
-
-            if (result.success) {
-                setEvents(events.map(event =>
-                    event._id === selectedEvent._id ? result.data : event
-                ))
-                message.success(result.message)
-
-            } else {
-                message.error(result.message)
-            }
-        } catch (error) {
-            console.error('Error updating event:', error)
-        } finally {
-            setSelectedEvent(null)
+                        </div>
+                    </div>
+                );
+            // View Product
+            case 'edit product':
+                return (
+                    <div style={contentStyle}>
+                        <h2 style={titleStyle}>Edit Products</h2>
+                        <div style={cardStyle}>
+                            <p style={textStyle}>
+                                Modify existing products, update pricing, inventory levels, and product descriptions.
+                            </p>
+                            <div className="container">
+                                <div className="row">
+                                    {
+                                        products.length == 0
+                                            ?
+                                            <h1 className='text-center my-5'>
+                                                There is no Products Available
+                                            </h1>
+                                            :
+                                            products.map((product, index) => {
+                                                return (
+                                                    <>
+                                                        <div className="col">
+                                                            <ProductCard
+                                                                key={index}
+                                                                id={product._id}
+                                                                description={product.description}
+                                                                img={product.img}
+                                                                name={product.name}
+                                                                category={product.category}
+                                                                panelBg={product.panelBg}
+                                                                bg={product.bg}
+                                                                price={product.price}
+                                                                oldPrice={product.oldPrice}
+                                                            />
+                                                        </div>
+                                                    </>
+                                                )
+                                            })
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            // View Orders
+            case 'view orders':
+                return (
+                    <div style={contentStyle}>
+                        <h2 style={titleStyle}>Order Management</h2>
+                        <div style={cardStyle}>
+                            <p style={textStyle}>
+                                Monitor and manage customer orders, track fulfillment status, and handle order processing.
+                            </p>
+                            <div style={{
+                                marginTop: '20px',
+                                padding: '20px',
+                                background: colors.primary,
+                                borderRadius: '8px',
+                                borderLeft: `4px solid ${colors.accent}`
+                            }}>
+                                <span style={{
+                                    color: colors.text,
+                                    fontSize: isMobile ? '12px' : '14px'
+                                }}>
+                                    📊 Order tracking dashboard will be implemented here
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            default:
+                return (
+                    <div style={contentStyle}>
+                        <h2 style={titleStyle}>Welcome to Admin Dashboard</h2>
+                        <p style={textStyle}>Select an option from the sidebar to get started</p>
+                    </div>
+                );
         }
-    }
+    };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target
-        setEditFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
-    }
-
-
-
-    // Handling Delete
-
-    const onDelete = (event) => {
-        setSelectedEvent(event)
-    }
-
-    const handleDeleteConfirm = async () => {
-        try {
-            const response = await fetch(`http://localhost:8000/deleteEvent/${selectedEvent._id}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: "include",
-            })
-
-            const result = await response.json()
-            console.log(result)
-
-            if (result.success) {
-                setEvents(events.filter(event => event._id !== selectedEvent._id))
-                message.success(result.message)
-
-            } else {
-                console.error('Failed to delete event')
-            }
-        } catch (error) {
-            console.error('Error deleting event:', error)
-        } finally {
-            setSelectedEvent(null)
+    const handleMenuClick = (section) => {
+        setActiveSection(section);
+        if (isMobile) {
+            setSidebarOpen(false);
         }
-    }
+    };
 
     return (
-        <main>
+        <div style={{
+            display: 'flex',
+            height: '100vh',
+            background: colors.primary,
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Mobile Menu Button */}
+            {isMobile && (
+                <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    style={{
+                        position: 'absolute',
+                        top: '15px',
+                        left: '15px',
+                        zIndex: 100,
+                        background: colors.accent,
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        fontSize: '18px',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                    }}
+                >
+                    ☰
+                </button>
+            )}
 
-            {
-                events.length == 0 && !isLoading
-                    ?
-                    <>
-                        <h1 className="text-center my-5 events-heading">
-                            No Events Are there
-                        </h1>
-                    </>
-                    :
-                    <div className="container">
-                        <div className="row">
-                            <h1 className="text-center my-5 events-heading">
-                                My Events
-                            </h1>
-                            {isLoading ? (
-                                <ProductLoader />
-                            ) : (
-                                <>
-                                    {events.map((event, index) => {
-                                        const eventDate = new Date(event.date).toLocaleDateString();
-                                        const convertToAMPM = (time) => {
-                                            let [hours, minutes] = time.split(':');
-                                            hours = parseInt(hours);
-                                            const ampm = hours >= 12 ? 'PM' : 'AM';
-                                            hours = hours % 12;
-                                            hours = hours ? hours : 12;
-                                            return `${hours}:${minutes} ${ampm}`;
-                                        };
+            {/* Mobile Overlay */}
+            {isMobile && sidebarOpen && (
+                <div
+                    onClick={() => setSidebarOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0,0,0,0.5)',
+                        zIndex: 999
+                    }}
+                />
+            )}
 
-                                        // Example Usage:
-                                        const eventTime = convertToAMPM(event.time);
-
-                                        return (
-                                            <div key={event._id} className="col-12 col-md-6 col-lg-4">
-                                                <div className="event-card">
-                                                    <div className="card-body mx-auto">
-                                                        <h3 className="card-title">{event.name}</h3>
-                                                        <p className="card-description">{event.description}</p>
-                                                        <p className="card-info">
-                                                            <strong>Organizer:</strong> {event.organizer}
-                                                        </p>
-                                                        <p className="card-info">
-                                                            <strong>Location:</strong> {event.location}
-                                                        </p>
-                                                        <p className="card-info">
-                                                            <strong>Date:</strong> {eventDate}
-                                                        </p>
-                                                        <p className="card-info">
-                                                            <strong>Time:</strong> {eventTime}
-                                                        </p>
-
-                                                        {/* Edit and Delete Buttons */}
-                                                        <div className="card-footer">
-                                                            <button
-                                                                className="btn btn-primary btn-sm me-2"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#editModal"
-                                                                onClick={() => onEdit(event)}
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                className="btn btn-danger btn-sm"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#deleteModal"
-                                                                onClick={() => onDelete(event)}
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </>
-                            )}
+            {/* Left Sidebar */}
+            <div style={{
+                width: '280px',
+                minWidth: '280px',
+                background: 'white',
+                boxShadow: '2px 0 15px rgba(68, 96, 122, 0.1)',
+                borderRight: `1px solid ${colors.primary}`,
+                position: isMobile ? 'fixed' : 'static',
+                left: isMobile ? (sidebarOpen ? '0' : '-280px') : '0',
+                top: 0,
+                height: '100vh',
+                zIndex: 1000,
+                transition: 'left 0.3s ease',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
+                {/* Sidebar Header */}
+                <div style={{
+                    padding: isMobile ? '20px' : '30px 25px',
+                    borderBottom: `1px solid ${colors.primary}`,
+                    background: `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})`,
+                    flexShrink: 0
+                }}>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <div>
+                            <h3 style={{
+                                margin: 0,
+                                color: 'white',
+                                fontSize: isMobile ? '18px' : '20px',
+                                fontWeight: '400',
+                                letterSpacing: '0.5px'
+                            }}>
+                                Admin Panel
+                            </h3>
+                            <p style={{
+                                margin: '5px 0 0 0',
+                                color: 'rgba(255,255,255,0.8)',
+                                fontSize: isMobile ? '11px' : '12px'
+                            }}>
+                                Dashboard Control
+                            </p>
                         </div>
-                    </div>
-            }
-
-            {/* Delete Confirmation Modal */}
-            <div className="modal fade" id="deleteModal" tabIndex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                <div className="modal-dialog">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="deleteModalLabel">Confirm Delete</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div className="modal-body">
-                            <p>Are you sure you want to delete the event <strong>"{selectedEvent?.name}"</strong>?</p>
-                            <p className="text-muted">This action cannot be undone.</p>
-                        </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-                                Cancel
+                        {isMobile && (
+                            <button
+                                onClick={() => setSidebarOpen(false)}
+                                style={{
+                                    background: 'rgba(255,255,255,0.2)',
+                                    border: 'none',
+                                    color: 'white',
+                                    fontSize: '20px',
+                                    cursor: 'pointer',
+                                    borderRadius: '4px',
+                                    padding: '5px 8px'
+                                }}
+                            >
+                                ×
                             </button>
-                            <button type="button" className="btn btn-danger" onClick={handleDeleteConfirm} data-bs-dismiss="modal">
-                                Delete Event
-                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Navigation Menu */}
+                <div style={{
+                    padding: '20px 0',
+                    flex: 1
+                }}>
+                    {[
+                        { key: 'add product', label: 'Add Product', icon: '➕' },
+                        { key: 'edit product', label: 'Edit Product', icon: '✏️' },
+                        { key: 'view orders', label: 'View Orders', icon: '📋' }
+                    ].map((item) => (
+                        <div
+                            key={item.key}
+                            style={{
+                                padding: isMobile ? '12px 20px' : '15px 25px',
+                                margin: '2px 15px',
+                                cursor: 'pointer',
+                                borderRadius: '8px',
+                                background: activeSection === item.key ? `linear-gradient(135deg, ${colors.accent}, ${colors.secondary})` : 'transparent',
+                                color: activeSection === item.key ? 'white' : colors.text,
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                alignItems: 'center',
+                                fontSize: isMobile ? '14px' : '15px',
+                                fontWeight: activeSection === item.key ? '500' : '400'
+                            }}
+                            onClick={() => handleMenuClick(item.key)}
+                            onMouseEnter={(e) => {
+                                if (activeSection !== item.key) {
+                                    e.target.style.background = colors.primary;
+                                    e.target.style.transform = 'translateX(5px)';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (activeSection !== item.key) {
+                                    e.target.style.background = 'transparent';
+                                    e.target.style.transform = 'translateX(0)';
+                                }
+                            }}
+                        >
+                            <span style={{
+                                marginRight: '12px',
+                                fontSize: isMobile ? '14px' : '16px'
+                            }}>
+                                {item.icon}
+                            </span>
+                            {item.label}
                         </div>
-                    </div>
+                    ))}
+                </div>
+
+                {/* Sidebar Footer */}
+                <div style={{
+                    padding: '15px 25px 20px',
+                    background: colors.primary,
+                    borderRadius: '0',
+                    textAlign: 'center',
+                    flexShrink: 0,
+                    marginBottom: "30px"
+                }}>
+                    <span style={{
+                        fontSize: isMobile ? '11px' : '12px',
+                        color: colors.secondary,
+                        fontWeight: '500'
+                    }}>
+                        Admin Dashboard v1.0
+                    </span>
                 </div>
             </div>
 
-            {/* Edit Modal */}
-            <div className="modal fade" id="editModal" tabIndex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-                <div className="modal-dialog modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title" id="editModalLabel">Edit Event</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <form onSubmit={handleEditSubmit} className='my-3'>
-                            <div className="modal-body">
-                                <div className="row">
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label htmlFor="name" className="form-label">Event Name</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                id="name"
-                                                name="name"
-                                                value={editFormData.name}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label htmlFor="organizer" className="form-label">Organizer</label>
-                                            <input
-                                                type="text"
-                                                className="form-control"
-                                                id="organizer"
-                                                name="organizer"
-                                                value={editFormData.organizer}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mb-3">
-                                    <label htmlFor="description" className="form-label">Description</label>
-                                    <textarea
-                                        className="form-control"
-                                        id="description"
-                                        name="description"
-                                        rows="3"
-                                        value={editFormData.description}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="mb-3">
-                                    <label htmlFor="location" className="form-label">Location</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        id="location"
-                                        name="location"
-                                        value={editFormData.location}
-                                        onChange={handleInputChange}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="row">
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label htmlFor="date" className="form-label">Date</label>
-                                            <input
-                                                type="date"
-                                                className="form-control"
-                                                id="date"
-                                                name="date"
-                                                value={editFormData.date}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="col-md-6">
-                                        <div className="mb-3">
-                                            <label htmlFor="time" className="form-label">Time</label>
-                                            <input
-                                                type="time"
-                                                className="form-control"
-                                                id="time"
-                                                name="time"
-                                                value={editFormData.time}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-success" data-bs-dismiss="modal">
-                                    Save Changes
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            {/* Main Content Area */}
+            <div style={{
+                flex: 1,
+                background: "white",
+                overflow: 'auto',
+                paddingTop: isMobile ? '60px' : '0',
+                width: isMobile ? '100%' : 'calc(100% - 280px)',
+                minHeight: '100vh'
+            }}>
+                {renderContent()}
             </div>
+        </div>
+    );
+};
 
-
-            <div className="container">
-                <div className="row">
-                    <div className="col">
-                        <p className="text-center my-4 fs-5 fw-bold">
-                            There are {events.length} events in total and {todayEvents.length} for today
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </main>
-    )
-}
+export default Admin;
