@@ -42,7 +42,6 @@ app.get("/logout", async (req, res) => {
     res.json({ message: "Logged out successfully", success: true })
 })
 
-
 app.get("/admin/viewProducts", async (req, res) => {
     try {
         const products = await product.find({})
@@ -65,6 +64,109 @@ app.get("/admin/viewProducts", async (req, res) => {
             message: "Some Error Occured"
         })
         console.log(error)
+    }
+})
+
+
+app.get("/admin/orders", async (req, res) => {
+    try {
+        const orders = await order.find()
+            .populate({
+                path: 'items.id',
+                model: 'Product'
+            })
+            .sort({ createdAt: -1 });
+
+        const ordersWithFlattenedItems = orders.map(orderItem => {
+            const flattenedItems = orderItem.items.map(item => {
+                let processedProduct = { ...item.id._doc };
+                
+                // Debug logging to see what we're working with
+                // console.log('Item structure:', {
+                //     hasId: !!item.id,
+                //     hasImg: !!item.id?.img,
+                //     imgType: typeof item.id?.img,
+                //     imgKeys: item.id?.img ? Object.keys(item.id.img) : null
+                // });
+
+                // Multiple approaches to handle different image buffer formats
+                let imgSrc = null;
+                
+                if (item.id && item.id.img) {
+                    try {
+                        let buffer;
+                        
+                        // Case 1: img is {type: 'Buffer', data: Array}
+                        if (item.id.img.type === 'Buffer' && item.id.img.data) {
+                            buffer = Buffer.from(item.id.img.data);
+                        }
+                        // Case 2: img is already a Buffer object
+                        else if (Buffer.isBuffer(item.id.img)) {
+                            buffer = item.id.img;
+                        }
+                        // Case 3: img.buffer exists (some MongoDB drivers)
+                        else if (item.id.img.buffer) {
+                            buffer = item.id.img.buffer;
+                        }
+                        // Case 4: Direct data array
+                        else if (Array.isArray(item.id.img)) {
+                            buffer = Buffer.from(item.id.img);
+                        }
+
+                        if (buffer && buffer.length > 0) {
+                            const imgBase64 = buffer.toString('base64');
+                            imgSrc = `data:image/png;base64,${imgBase64}`;
+                            console.log('Successfully converted image, base64 length:', imgBase64.length);
+                        } else {
+                            console.log('No valid buffer found for image');
+                        }
+                    } catch (error) {
+                        console.error('Error converting image:', error);
+                    }
+                }
+
+                processedProduct.img = imgSrc;
+
+                // Flatten: spread all product properties + add quantity
+                return {
+                    ...processedProduct,
+                    quantity: item.quantity,
+                    itemId: item._id
+                };
+            });
+
+            return {
+                ...orderItem._doc,
+                items: flattenedItems
+            };
+        });
+
+        res.json({
+            success: true,
+            data: ordersWithFlattenedItems,
+            message: "Orders fetched successfully"
+        });
+    } catch (error) {
+        console.error('Admin orders error:', error);
+        res.json({
+            success: false,
+            message: "Some Error Occurred"
+        });
+    }
+});
+
+app.get("/admin/orders/:id/delete" , async (req,res) => {
+    try {
+        const orderFound = await order.findByIdAndDelete(req.params.id)
+        res.json({
+            success: true,
+            message: "Deleted successfully"
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Some Error Occurred"
+        })
     }
 })
 
@@ -166,27 +268,29 @@ app.get("/cart/:user/remove/:id", async (req, res) => {
 })
 
 
-app.get("/profile/user/:id", async (req, res) => { 
+app.get("/profile/user/:id", async (req, res) => {
     try {
         const userFound = await user.findById(req.params.id)
             .populate({
                 path: 'orders',
                 populate: {
                     path: 'items.id',
-                    model: 'Product' 
+                    model: 'Product'
                 }
             });
-            
+            console.log(userFound)
+            return
+
         let userImgSrc = null;
         if (userFound.profileImg) {
-            const imgBase64 = userFound.profileImg.toString('base64'); 
-            userImgSrc = `data:image/png;base64,${imgBase64}`; 
+            const imgBase64 = userFound.profileImg.toString('base64');
+            userImgSrc = `data:image/png;base64,${imgBase64}`;
         }
 
         const ordersWithImages = userFound.orders.map(order => {
             const itemsWithImages = order.items.map(orderItem => {
                 let itemImgSrc = null;
-                
+
                 if (orderItem.id && orderItem.id.img) {
                     const imgBase64 = orderItem.id.img.toString('base64');
                     itemImgSrc = `data:image/png;base64,${imgBase64}`;
@@ -211,25 +315,32 @@ app.get("/profile/user/:id", async (req, res) => {
             ...userFound._doc,
             orders: ordersWithImages
         };
-        
-        res.json({ 
-            data: processedUser, 
-            img: userImgSrc, 
-            success: true, 
-            message: "Data fetched successfully" 
+
+        res.json({
+            data: processedUser,
+            img: userImgSrc,
+            success: true,
+            message: "Data fetched successfully"
         });
     } catch (error) {
-        console.error(error);
-        res.json({ 
-            success: false, 
-            message: "Something went wrong" 
+        // console.error(error);
+        res.json({
+            success: false,
+            message: "Something went wrong"
         });
-    } 
+    }
 });
 
 
 app.get("/navImage/user/:id", async (req, res) => {
     const userFound = await user.findById(req.params.id)
+    if (userFound.profileImg == "default.png") {
+        return res.json({
+            img: null,
+            success: true,
+            message: "Nothing went wrong"
+        })
+    }
     const imgBase64 = userFound.profileImg.toString('base64');
     const imgSrc = `data:image/png;base64,${imgBase64}`;
     try {
@@ -260,11 +371,25 @@ app.post("/login", async (req, res) => {
                     secure: false,
                 });
 
-                res.json({
-                    success: true,
-                    message: "Logged In",
-                    user: userFound
-                })
+                if (userFound.profileImg != "default.png") {
+                    const imgBase64 = userFound.profileImg.toString('base64');
+                    const imgSrc = `data:image/png;base64,${imgBase64}`;
+                    userFound.profileImg = imgSrc
+                    console.log(userFound)
+                    res.json({
+                        success: true,
+                        message: "Logged In",
+                        user: userFound,
+                        img: imgSrc
+                    })
+                } else {
+                    res.json({
+                        success: true,
+                        message: "Logged In",
+                        user: userFound,
+                    })
+                }
+
             }
             else {
                 res.json({
@@ -467,6 +592,24 @@ app.post("/profile/updatePassword/:id", async (req, res) => {
             message: "Something went Wrong"
         })
         console.log(error)
+    }
+})
+
+
+app.post("/admin/orders/:id/status", async (req,res) => {
+    try {
+        const orderFound = await order.findById(req.params.id)
+        orderFound.status = req.body.status.toLowerCase()
+        orderFound.save()
+        res.json({
+            success: true,
+            message: "Nothing went wrong"
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: "Something went wrong"
+        })
     }
 })
 

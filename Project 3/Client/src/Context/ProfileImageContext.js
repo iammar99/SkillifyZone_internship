@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useAuthContext } from './AuthContext'
+import logo from "../Assets/default.png"
 
 const ProfileImageContext = createContext()
+
 
 
 export default function ProfileImageContextProvider({ children }) {
@@ -11,13 +12,16 @@ export default function ProfileImageContextProvider({ children }) {
 
     const fetchData = async () => {
         const user = JSON.parse(localStorage.getItem("user"))
+        if(!user){
+            return
+        }
         try {
             const response = await fetch(`http://localhost:8000/navImage/user/${user.id}`, {
                 method: "GET",
                 credentials: "include",
             })
             const result = await response.json()
-            setProfileImg(result.img)
+            setProfileImg(result.img || logo)
         } catch (error) {
             console.error(error)
         }
@@ -27,7 +31,7 @@ export default function ProfileImageContextProvider({ children }) {
     }, [])
 
     return (
-        <ProfileImageContext.Provider value={{ profileImg, setProfileImg }}>
+        <ProfileImageContext.Provider value={{ profileImg, setProfileImg, fetchData }}>
             {children}
         </ProfileImageContext.Provider>
     )

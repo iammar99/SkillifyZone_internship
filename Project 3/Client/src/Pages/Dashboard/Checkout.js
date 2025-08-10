@@ -10,7 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 export default function Checkout() {
 
 
-    const { profile, setProfile } = useProfileContext()
+    const { profile, setProfile , fetchData } = useProfileContext()
 
     const { cart, setCart } = useCartContext();
     const { user } = useAuthContext();
@@ -157,54 +157,51 @@ export default function Checkout() {
         return true;
     };
 
-    const handlePlaceOrder = async () => {
-        if (!validateForm()) return;
-        if (!validatePayment()) return;
-        // console.log("first")
+const handlePlaceOrder = async () => {
+    if (!validateForm()) return;
+    if (!validatePayment()) return;
 
-        setIsProcessing(true);
-        try {
-            const orderData = {
-                userId: user.id,
-                items: cart.map((prod) => { return { id: prod._id, quantity: prod.quantity || 1 } }),
-                shippingInfo,
-                paymentInfo,
-                billingInfo: billingInfo.sameAsShipping ? shippingInfo : billingInfo,
-                subtotal: calculateTotal(),
-                tax: calculateTax(),
-                total: calculateFinalTotal(),
-            };
-            console.log(orderData)
+    setIsProcessing(true);
+    try {
+        const orderData = {
+            userId: user.id,
+            items: cart.map((prod) => {
+                return { id: prod._id, quantity: prod.quantity || 1 };
+            }),
+            shippingInfo,
+            paymentInfo,
+            billingInfo: billingInfo.sameAsShipping ? shippingInfo : billingInfo,
+            subtotal: calculateTotal(),
+            tax: calculateTax(),
+            total: calculateFinalTotal(),
+        };
 
 
-            const response = await fetch('http://localhost:8000/orders/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify(orderData),
-            });
+        const response = await fetch('http://localhost:8000/orders/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(orderData),
+        });
 
-            const result = await response.json();
+        const result = await response.json();
 
-            if (result.success) {
-                message.success('Order placed successfully!');
-                setCart([]);
-                setProfile({
-                    ...profile,
-                    orders: [...profile.orders, orderData]
-                });
-                navigate('/dashboard/profile');
-            } else {
-                message.error(result.message || 'Failed to place order');
-            }
-        } catch (error) {
-            message.error('Something went wrong. Please try again.');
-        } finally {
-            setIsProcessing(false);
+        if (result.success) {
+            message.success('Order placed successfully!');
+            setCart([]);
+            fetchData(); 
+            navigate('/dashboard/profile');
+        } else {
+            message.error(result.message || 'Failed to place order');
         }
-    };
+    } catch (error) {
+        message.error('Something went wrong. Please try again.');
+    } finally {
+        setIsProcessing(false);
+    }
+};
 
     useEffect(() => {
         if (cart.length === 0) {

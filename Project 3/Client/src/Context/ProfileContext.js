@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuthContext } from './AuthContext'
+import { message } from 'antd'
 
 const ProfileContext = createContext()
 
@@ -8,10 +9,9 @@ export default function ProfileContextProvider({ children }) {
 
 
     const [profile, setProfile] = useState({})
-    const fetchData = async () => {
-        const user = JSON.parse(localStorage.getItem("user"))
+    const fetchData = async (id) => {
         try {
-            const response = await fetch(`http://localhost:8000/profile/user/${user.id}`, {
+            const response = await fetch(`http://localhost:8000/profile/user/${id}`, {
                 method: "GET",
                 header: {
                     "Content-Type": "aplication/json"
@@ -20,7 +20,13 @@ export default function ProfileContextProvider({ children }) {
             })
 
             const result = await response.json()
-            setProfile(result.data)
+            if(result.success){
+                setProfile(result.data)
+            }
+            else{
+                message.error("error While loading profile")
+            }
+            console.log("context",result.data)
         } catch (error) {
             console.error(error)
 
@@ -28,10 +34,14 @@ export default function ProfileContextProvider({ children }) {
     }
 
     useEffect(() => {
-        fetchData()
+        var userFound = JSON.parse(localStorage.getItem("user"))
+        console.log(userFound)
+        if (userFound) {
+            fetchData(userFound.id)
+        }
     }, [])
     return (
-        <ProfileContext.Provider value={{ profile, setProfile }}>
+        <ProfileContext.Provider value={{ profile, setProfile, fetchData }}>
             {children}
         </ProfileContext.Provider>
     )

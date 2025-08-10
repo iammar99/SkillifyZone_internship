@@ -2,11 +2,16 @@ import { useAuthContext } from 'Context/AuthContext'
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { message } from 'antd'
+import { useProfileImageContext } from 'Context/ProfileImageContext'
+import logo from "../../Assets/default.png"
+import { useProfileContext } from 'Context/ProfileContext'
 
 export default function Login() {
 
   // -------------- Auth context --------------
   const { isAuth, setIsAuth, user, setUser } = useAuthContext()
+  const { setProfileImg} = useProfileImageContext()
+  const { fetchData} = useProfileContext()
 
 
   // -------------- State --------------
@@ -51,7 +56,8 @@ export default function Login() {
 
       setIsAuth(true)
       setUser(userData)
-
+      setProfileImg(result.img || logo)
+      fetchData(userData.id)
       localStorage.setItem("token", "true")
       localStorage.setItem("user", JSON.stringify(userData))
     }

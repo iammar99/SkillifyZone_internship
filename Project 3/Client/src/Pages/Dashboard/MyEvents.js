@@ -65,8 +65,6 @@ export default function MyEvents() {
 
     const handleEditSubmit = async (e) => {
         e.preventDefault()
-        console.log(selectedEvent)
-        console.log(editFormData)
         try {
             const response = await fetch(`http://localhost:8000/updateEvent/${selectedEvent._id}`, {
                 method: "POST",

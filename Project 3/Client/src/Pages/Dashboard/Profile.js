@@ -10,6 +10,7 @@ export default function AccountPage() {
     const [activeTab, setActiveTab] = useState('profile');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { profile, setProfile } = useProfileContext()
+    console.log("profile Page ", profile)
     // State for handling password form
     const [isForm, setIsForm] = useState(false)
     const [updatePasswordState, setUpdatePasswordState] = useState({})
@@ -17,21 +18,30 @@ export default function AccountPage() {
 
     // State for handleing Profile Data for updation
     const [profileData, setProfileData] = useState({
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        contact: profile.contact,
-        email: profile.email
+        firstName: profile?.firstName || "",
+        lastName: profile?.lastName || "",
+        contact: profile?.contact || "",
+        email: profile?.email || ""
     })
     const { user, setIsAuth } = useAuthContext()
     const { profileImg, setProfileImg } = useProfileImageContext()
 
-    const navigationItems = [
-        { id: 'profile', label: 'Profile Settings', icon: 'fa-user' },
-        { id: 'orders', label: 'My orders', icon: 'fa-shopping-bag' },
-        { id: 'addresses', label: 'Your addresses', icon: 'fa-map-marker-alt' },
-        { id: 'security', label: 'Login & security', icon: 'fa-shield-alt' },
-        { id: 'logout', label: 'Log out', icon: 'fa-sign-out-alt' }
-    ];
+    const navigationItems =
+        user.role == "admin"
+            ?
+            [
+                { id: 'profile', label: 'Profile Settings', icon: 'fa-user' },
+                { id: 'security', label: 'Login & security', icon: 'fa-shield-alt' },
+                { id: 'logout', label: 'Log out', icon: 'fa-sign-out-alt' }
+            ]
+            :
+            [
+                { id: 'profile', label: 'Profile Settings', icon: 'fa-user' },
+                { id: 'orders', label: 'My orders', icon: 'fa-shopping-bag' },
+                { id: 'addresses', label: 'Your addresses', icon: 'fa-map-marker-alt' },
+                { id: 'security', label: 'Login & security', icon: 'fa-shield-alt' },
+                { id: 'logout', label: 'Log out', icon: 'fa-sign-out-alt' }
+            ]
 
 
     // For Logging Out
@@ -47,6 +57,8 @@ export default function AccountPage() {
             localStorage.removeItem("user")
             localStorage.removeItem("token")
             setIsAuth(false)
+            setProfile({})
+            setProfileImg(null)
         }
         else {
             message.error(result.message)
@@ -178,260 +190,278 @@ export default function AccountPage() {
 
     const renderOrdersContent = () => (
         <div className="orders-content">
-            {profile.orders?.map((order) => {
-                const orderId = String(order._id).slice(-8);
-                const orderDate = new Date(order.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
+            {
+                profile.orders.length == 0
+                    ?
+                    <h1 className="my-4 text-center fw-bold">
+                        You have no orders yet
+                    </h1>
+                    :
+                    <>
+                        {profile.orders?.map((order) => {
+                            const orderId = String(order._id).slice(-8);
+                            const orderDate = new Date(order.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            });
 
-                const invoiceDate = new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+                            const invoiceDate = new Date().toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
 
-                return (
-                    <div key={order._id} className="order-wrapper">
-                        {/* Visible Order Card */}
-                        <div className="order-card">
-                            <div className="order-header">
-                                <div className="order-info">
-                                    <h3>Order #: {orderId}</h3>
-                                    <p>{order.items.length} Products | By {profile.username} | {orderDate}</p>
-                                </div>
-                                <div className="order-actions">
-                                    <button
-                                        className="download-btn"
-                                        onClick={() => generateInvoice(order)}
-                                    >
-                                        <i className="fas fa-download"></i>
-                                        <span>Download invoice</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="order-details">
-                                <div className="detail-row">
-                                    <span className="label">Status:</span>
-                                    <span className="status on-way">{order.status || 'Processing'}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Order Date:</span>
-                                    <span>{orderDate}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Delivered to:</span>
-                                    <span>{`${order.shippingInfo.address}, ${order.shippingInfo.city}, ${order.shippingInfo.state} ${order.shippingInfo.zipCode}`}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Subtotal:</span>
-                                    <span>${order.subtotal}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Tax:</span>
-                                    <span>${order.tax}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Total:</span>
-                                    <span className="total">${order.total}</span>
-                                </div>
-                            </div>
-
-                            <div className="order-items">
-                                {order.items.map((orderItem, index) => {
-                                    const item = orderItem.id;
-                                    let itemImage = item.img;
-
-                                    return (
-                                        <div key={index} className="order-item">
-                                            <div className="item-image">
-                                                <img src={itemImage} alt={item?.name || 'Product'} style={{ width: '80px', height: '80px', objectFit: 'cover' }} />
+                            return (
+                                <div key={order._id} className="order-wrapper">
+                                    {/* Visible Order Card */}
+                                    <div className="order-card">
+                                        <div className="order-header">
+                                            <div className="order-info">
+                                                <h3>Order #: {orderId}</h3>
+                                                <p>{order.items.length} Products | By {profile.username} | {orderDate}</p>
                                             </div>
-                                            <div className="item-details">
-                                                <h4>{item?.name || 'Product Name'}</h4>
-                                                <p>Quantity: {orderItem.quantity}</p>
-                                                <p>Price: ${item?.price || 'N/A'}</p>
-                                                {item?.color && <p>Color: {item.color}</p>}
-                                                {item?.size && <p>Size: {item.size}</p>}
+                                            <div className="order-actions">
+                                                <button
+                                                    className="download-btn"
+                                                    onClick={() => generateInvoice(order)}
+                                                >
+                                                    <i className="fas fa-download"></i>
+                                                    <span>Download invoice</span>
+                                                </button>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
 
-                        {/* Hidden Invoice Template - Fixed positioning */}
-                        <div id={`invoice-${order._id}`} className="invoice-template">
-                            {/* Invoice Header */}
-                            <div className="invoice-header">
-                                <div className="company-info">
-                                    <h1 className="company-name">LuxeFits</h1>
-                                    <div className="company-details">
-                                        <p>123 Business Street</p>
-                                        <p>City, State 12345</p>
-                                        <p>Phone: (555) 123-4567</p>
-                                        <p>Email: info@luxefits.com</p>
-                                    </div>
-                                </div>
-                                <div className="invoice-info">
-                                    <h2>INVOICE</h2>
-                                    <div className="invoice-details">
-                                        <p><strong>Invoice #:</strong> INV-{orderId}</p>
-                                        <p><strong>Order #:</strong> {orderId}</p>
-                                        <p><strong>Invoice Date:</strong> {invoiceDate}</p>
-                                        <p><strong>Order Date:</strong> {orderDate}</p>
-                                    </div>
-                                </div>
-                            </div>
+                                        <div className="order-details">
+                                            <div className="detail-row">
+                                                <span className="label">Status:</span>
+                                                <span className="status on-way">{order.status}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Order Date:</span>
+                                                <span>{orderDate}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Delivered to:</span>
+                                                <span>{`${order.shippingInfo.address}, ${order.shippingInfo.city}, ${order.shippingInfo.state} ${order.shippingInfo.zipCode}`}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Subtotal:</span>
+                                                <span>${order.subtotal}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Tax:</span>
+                                                <span>${order.tax}</span>
+                                            </div>
+                                            <div className="detail-row">
+                                                <span className="label">Total:</span>
+                                                <span className="total">${order.total}</span>
+                                            </div>
+                                        </div>
 
-                            {/* Bill To & Ship To */}
-                            <div className="billing-shipping">
-                                <div className="billing-info">
-                                    <h3>BILL TO:</h3>
-                                    <div className="address-details">
-                                        <p className="name">
-                                            {order.billingInfo.firstName} {order.billingInfo.lastName}
-                                        </p>
-                                        <p>{order.billingInfo.address}</p>
-                                        <p>
-                                            {order.billingInfo.city}, {order.billingInfo.state} {order.billingInfo.zipCode}
-                                        </p>
-                                        <p>{order.billingInfo.country}</p>
-                                    </div>
-                                </div>
-                                <div className="shipping-info">
-                                    <h3>SHIP TO:</h3>
-                                    <div className="address-details">
-                                        <p className="name">
-                                            {order.shippingInfo.firstName} {order.shippingInfo.lastName}
-                                        </p>
-                                        <p>{order.shippingInfo.address}</p>
-                                        <p>
-                                            {order.shippingInfo.city}, {order.shippingInfo.state} {order.shippingInfo.zipCode}
-                                        </p>
-                                        <p>{order.shippingInfo.country}</p>
-                                        <p>Phone: {order.shippingInfo.phone}</p>
-                                        <p>Email: {order.shippingInfo.email}</p>
-                                    </div>
-                                </div>
-                            </div>
+                                        <div className="order-items">
+                                            {order.items.map((orderItem, index) => {
+                                                const item = orderItem.id;
 
-                            {/* Items Table */}
-                            <div className="items-section">
-                                <table className="items-table">
-                                    <thead>
-                                        <tr>
-                                            <th className="item-desc">Item Description</th>
-                                            <th className="item-qty">Qty</th>
-                                            <th className="item-price">Unit Price</th>
-                                            <th className="item-total">Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {order.items.map((orderItem, index) => {
-                                            const item = orderItem.id;
-                                            const itemTotal = (parseFloat(item?.price || 0) * orderItem.quantity).toFixed(2);
-
-                                            return (
-                                                <tr key={index}>
-                                                    <td className="item-desc">
-                                                        <div className="item-name">
-                                                            {item?.name || 'Product Name'}
+                                                return (
+                                                    <div key={index} className="order-item">
+                                                        <div className="item-image">
+                                                            <img
+                                                                src={item.img}
+                                                                alt={item?.name || 'Product'}
+                                                                style={{
+                                                                    width: '80px',
+                                                                    height: '80px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '8px'
+                                                                }}
+                                                            />
                                                         </div>
-                                                        {item?.color && (
-                                                            <div className="item-attribute">
-                                                                Color: {item.color}
-                                                            </div>
-                                                        )}
-                                                        {item?.size && (
-                                                            <div className="item-attribute">
-                                                                Size: {item.size}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="item-qty">
-                                                        {orderItem.quantity}
-                                                    </td>
-                                                    <td className="item-price">
-                                                        ${item?.price || '0.00'}
-                                                    </td>
-                                                    <td className="item-total">
-                                                        ${itemTotal}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                        <div className="item-details">
+                                                            <h4>{item?.name || 'Product Name'}</h4>
+                                                            <p>Quantity: {orderItem.quantity}</p>
+                                                            <p>Price: ${item?.price || 'N/A'}</p>
+                                                            {item?.color && <p>Color: {item.color}</p>}
+                                                            {item?.size && <p>Size: {item.size}</p>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
 
-                            {/* Totals */}
-                            <div className="totals-section">
-                                <div className="totals-table">
-                                    <table>
-                                        <tbody>
-                                            <tr>
-                                                <td className="total-label">
-                                                    <strong>Subtotal:</strong>
-                                                </td>
-                                                <td className="total-value">
-                                                    ${order.subtotal}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td className="total-label">
-                                                    <strong>Tax:</strong>
-                                                </td>
-                                                <td className="total-value">
-                                                    ${order.tax}
-                                                </td>
-                                            </tr>
-                                            <tr className="grand-total">
-                                                <td className="total-label">
-                                                    TOTAL:
-                                                </td>
-                                                <td className="total-value">
-                                                    ${order.total}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    {/* Beautiful Hidden Invoice Template */}
+                                    <div id={`invoice-${order._id}`} className="invoice-template">
+                                        {/* Invoice Header */}
+                                        <div className="invoice-header">
+                                            <div className="company-info">
+                                                <h1 className="company-name">LuxeFits</h1>
+                                                <div className="company-details">
+                                                    <p>123 Business Street</p>
+                                                    <p>City, State 12345</p>
+                                                    <p>Phone: (555) 123-4567</p>
+                                                    <p>Email: info@luxefits.com</p>
+                                                </div>
+                                            </div>
+                                            <div className="invoice-info">
+                                                <h2>INVOICE</h2>
+                                                <div className="invoice-details">
+                                                    <p><strong>Invoice #:</strong> INV-{orderId}</p>
+                                                    <p><strong>Order #:</strong> {orderId}</p>
+                                                    <p><strong>Invoice Date:</strong> {invoiceDate}</p>
+                                                    <p><strong>Order Date:</strong> {orderDate}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Bill To & Ship To */}
+                                        <div className="billing-shipping">
+                                            <div className="billing-info">
+                                                <h3>BILL TO:</h3>
+                                                <div className="address-details">
+                                                    <p className="name">
+                                                        {order.billingInfo.firstName} {order.billingInfo.lastName}
+                                                    </p>
+                                                    <p>{order.billingInfo.address}</p>
+                                                    <p>
+                                                        {order.billingInfo.city}, {order.billingInfo.state} {order.billingInfo.zipCode}
+                                                    </p>
+                                                    <p>{order.billingInfo.country}</p>
+                                                </div>
+                                            </div>
+                                            <div className="shipping-info">
+                                                <h3>SHIP TO:</h3>
+                                                <div className="address-details">
+                                                    <p className="name">
+                                                        {order.shippingInfo.firstName} {order.shippingInfo.lastName}
+                                                    </p>
+                                                    <p>{order.shippingInfo.address}</p>
+                                                    <p>
+                                                        {order.shippingInfo.city}, {order.shippingInfo.state} {order.shippingInfo.zipCode}
+                                                    </p>
+                                                    <p>{order.shippingInfo.country}</p>
+                                                    <p>Phone: {order.shippingInfo.phone}</p>
+                                                    <p>Email: {order.shippingInfo.email}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Items Table */}
+                                        <div className="items-section">
+                                            <table className="items-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="item-desc">Item Description</th>
+                                                        <th className="item-qty">Qty</th>
+                                                        <th className="item-price">Unit Price</th>
+                                                        <th className="item-total">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {order.items.map((orderItem, index) => {
+                                                        const item = orderItem.id;
+                                                        const itemTotal = (parseFloat(item?.price || 0) * orderItem.quantity).toFixed(2);
+
+                                                        return (
+                                                            <tr key={index}>
+                                                                <td className="item-desc">
+                                                                    <div className="item-name">
+                                                                        {item?.name || 'Product Name'}
+                                                                    </div>
+                                                                    {item?.color && (
+                                                                        <div className="item-attribute">
+                                                                            Color: {item.color}
+                                                                        </div>
+                                                                    )}
+                                                                    {item?.size && (
+                                                                        <div className="item-attribute">
+                                                                            Size: {item.size}
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                                <td className="item-qty">
+                                                                    {orderItem.quantity}
+                                                                </td>
+                                                                <td className="item-price">
+                                                                    ${item?.price || '0.00'}
+                                                                </td>
+                                                                <td className="item-total">
+                                                                    ${itemTotal}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* Totals */}
+                                        <div className="totals-section">
+                                            <div className="totals-table">
+                                                <table>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td className="total-label">
+                                                                <strong>Subtotal:</strong>
+                                                            </td>
+                                                            <td className="total-value">
+                                                                ${order.subtotal}
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="total-label">
+                                                                <strong>Tax:</strong>
+                                                            </td>
+                                                            <td className="total-value">
+                                                                ${order.tax}
+                                                            </td>
+                                                        </tr>
+                                                        <tr className="grand-total">
+                                                            <td className="total-label">
+                                                                TOTAL:
+                                                            </td>
+                                                            <td className="total-value">
+                                                                ${order.total}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        {/* Payment Information */}
+                                        <div className="payment-section">
+                                            <h3>PAYMENT INFORMATION:</h3>
+                                            <div className="payment-details">
+                                                <p>
+                                                    <strong>Payment Method:</strong> {order.paymentInfo.paymentMethod === 'card' ? 'Credit Card' : order.paymentInfo.paymentMethod}
+                                                </p>
+                                                <p>
+                                                    <strong>Card:</strong> ****-****-****-{order.paymentInfo.cardNumber.slice(-4)}
+                                                </p>
+                                                <p>
+                                                    <strong>Cardholder:</strong> {order.paymentInfo.nameOnCard}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Footer */}
+                                        <div className="invoice-footer">
+                                            <p>
+                                                Thank you for your business! If you have any questions about this invoice,
+                                                please contact us at info@luxefits.com or (555) 123-4567.
+                                            </p>
+                                            <p>
+                                                <strong>Terms & Conditions:</strong> Payment is due within 30 days.
+                                                Late payments may be subject to a service charge.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-
-                            {/* Payment Information */}
-                            <div className="payment-section">
-                                <h3>PAYMENT INFORMATION:</h3>
-                                <div className="payment-details">
-                                    <p>
-                                        <strong>Payment Method:</strong> {order.paymentInfo.paymentMethod === 'card' ? 'Credit Card' : order.paymentInfo.paymentMethod}
-                                    </p>
-                                    <p>
-                                        <strong>Card:</strong> ****-****-****-{order.paymentInfo.cardNumber.slice(-4)}
-                                    </p>
-                                    <p>
-                                        <strong>Cardholder:</strong> {order.paymentInfo.nameOnCard}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Footer */}
-                            <div className="invoice-footer">
-                                <p>
-                                    Thank you for your business! If you have any questions about this invoice,
-                                    please contact us at info@luxefits.com or (555) 123-4567.
-                                </p>
-                                <p>
-                                    <strong>Terms & Conditions:</strong> Payment is due within 30 days.
-                                    Late payments may be subject to a service charge.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })}
+                            );
+                        })}
+                    </>
+            }
         </div>
     );
 
@@ -449,10 +479,10 @@ export default function AccountPage() {
                 <div className="address-card">
                     <div className="address-header">
                         <h3>Home</h3>
-                        <div className="address-actions">
+                        {/* <div className="address-actions">
                             <button className="edit-btn"><i className="fas fa-edit"></i></button>
                             <button className="delete-btn"><i className="fas fa-trash"></i></button>
-                        </div>
+                        </div> */}
                     </div>
                     <div className="address-content">
                         <p><strong>{profile.firstName + " " + profile.lastName}</strong></p>

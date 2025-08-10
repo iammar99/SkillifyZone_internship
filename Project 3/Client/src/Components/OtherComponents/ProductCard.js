@@ -17,7 +17,7 @@ export default function ProductCard(props) {
     const [isAdded, setIsAdded] = useState(false)
 
     useEffect(() => {
-        const existsInCart = cart.some((prod) => prod._id === props.id);
+        const existsInCart = cart.some((prod) => (prod.id === props.id || prod._id === props.id));
         if (existsInCart) {
             setIsAdded(true)
         } else {
@@ -45,7 +45,7 @@ export default function ProductCard(props) {
             navigate("/auth/");
             return
         }
-        const existsInCart = cart.some((prod) => prod._id === product.id);
+        const existsInCart = cart.some((prod) => (prod._id === product.id || prod.id === product.id));
         if (!existsInCart) {
             try {
                 const data = {
@@ -61,8 +61,7 @@ export default function ProductCard(props) {
                     body: JSON.stringify(data)
                 })
                 const result = await response.json()
-                console.log(result)
-                setCart([...cart, product.id])
+                setCart([...cart, product])
                 message.success("Added to cart")
             } catch (error) {
                 message.error("Something went wrong")

@@ -13,7 +13,6 @@ import { useAuthContext } from 'Context/AuthContext'
 export default function Index() {
 
   const { isAuth } = useAuthContext()
-  console.log(isAuth)
 
   return (
     <>

@@ -138,6 +138,10 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  status : {
+    type: String,
+    default :"pending"
+  }
 }, { timestamps: true });
 
 const OrderModel = mongoose.model("Order", orderSchema);

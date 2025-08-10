@@ -15,8 +15,13 @@ export default function ProductDetail() {
     const navigate = useNavigate(-1)
 
     useEffect(() => {
+        const existsInCart = cart.some((prod) => (prod.id === productDetail.id || prod._id === productDetail.id));
+        if (existsInCart) {
+            setIsAdded(true)
+        } else {
+            setIsAdded(false)
+        }
         if (!productDetail) {
-            console.log("first")
             navigate(-1)
         }
     }, [])
@@ -35,7 +40,7 @@ export default function ProductDetail() {
             navigate("/auth/")
             return
         }
-        const existsInCart = cart.some((prod) => prod._id === productDetail.id);
+        const existsInCart = cart.some((prod) => (prod._id === productDetail.id || prod.id === productDetail.id));
         if (!existsInCart) {
             try {
                 const data = {
@@ -51,13 +56,12 @@ export default function ProductDetail() {
                     body: JSON.stringify(data)
                 })
                 const result = await response.json()
-                console.log(result)
                 setCart([...cart, productDetail])
                 message.success("Added to cart")
             } catch (error) {
                 message.error("Something went wrong")
             }
-        }else{
+        } else {
             message.error("Already Added")
         }
     }

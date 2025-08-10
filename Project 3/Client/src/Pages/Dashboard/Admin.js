@@ -1,6 +1,7 @@
 import { message } from 'antd';
 import ProductCard from 'Components/OtherComponents/ProductCard';
 import React, { useState, useEffect } from 'react';
+import AdminOrdersView from 'Components/OtherComponents/AdminView';
 
 const Admin = () => {
     const [activeSection, setActiveSection] = useState('add product');
@@ -13,6 +14,7 @@ const Admin = () => {
     // ----------------------- Add Products -----------------------
 
     const [product, setProduct] = useState({})
+    const [order, setOrder] = useState({})
 
     const autoResize = (e) => {
         e.target.style.height = 'auto';
@@ -78,22 +80,24 @@ const Admin = () => {
     }
 
 
-    // ----------------------- View Products -----------------------
 
     const [products, setProducts] = useState([])
 
     const fetchData = async () => {
-        const response = await fetch("http://localhost:8000/admin/viewProducts", {
-            method: "GET",
-        })
-        const result = await response.json()
-        setProducts(result.data)
+        try {
+            const response = await fetch("http://localhost:8000/admin/viewProducts", {
+                method: "GET",
+            })
+            const result = await response.json()
+            setProducts(result.data)
+        } catch (error) {
+            message.error("Something went wrong")
+        }
     }
 
     useEffect(() => {
         fetchData()
     }, [activeSection])
-
 
 
     const colors = {
@@ -320,30 +324,31 @@ const Admin = () => {
                 );
             // View Orders
             case 'view orders':
-                return (
-                    <div style={contentStyle}>
-                        <h2 style={titleStyle}>Order Management</h2>
-                        <div style={cardStyle}>
-                            <p style={textStyle}>
-                                Monitor and manage customer orders, track fulfillment status, and handle order processing.
-                            </p>
-                            <div style={{
-                                marginTop: '20px',
-                                padding: '20px',
-                                background: colors.primary,
-                                borderRadius: '8px',
-                                borderLeft: `4px solid ${colors.accent}`
-                            }}>
-                                <span style={{
-                                    color: colors.text,
-                                    fontSize: isMobile ? '12px' : '14px'
-                                }}>
-                                    📊 Order tracking dashboard will be implemented here
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                );
+                return <AdminOrdersView />
+            // return (
+            //     <div style={contentStyle}>
+            //         <h2 style={titleStyle}>Order Management</h2>
+            //         <div style={cardStyle}>
+            //             <p style={textStyle}>
+            //                 Monitor and manage customer orders, track fulfillment status, and handle order processing.
+            //             </p>
+            //             <div style={{
+            //                 marginTop: '20px',
+            //                 padding: '20px',
+            //                 background: colors.primary,
+            //                 borderRadius: '8px',
+            //                 borderLeft: `4px solid ${colors.accent}`
+            //             }}>
+            //                 <span style={{
+            //                     color: colors.text,
+            //                     fontSize: isMobile ? '12px' : '14px'
+            //                 }}>
+            //                     📊 Order tracking dashboard will be implemented here
+            //                 </span>
+            //             </div>
+            //         </div>
+            //     </div>
+            // );
             default:
                 return (
                     <div style={contentStyle}>

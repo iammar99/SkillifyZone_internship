@@ -5,11 +5,13 @@ import { Link, NavLink } from 'react-router-dom'
 import { useAuthContext } from 'Context/AuthContext'
 import { message } from 'antd'
 import { useProfileImageContext } from 'Context/ProfileImageContext'
+import { useProfileContext } from 'Context/ProfileContext'
 
 export default function TopNav() {
   const { isAuth, setIsAuth, user } = useAuthContext()
   const [isLoading, setIsLoading] = useState(false)
-  const {profileImg} = useProfileImageContext()
+  const { profileImg, setProfileImg } = useProfileImageContext()
+  const { setProfile } = useProfileContext()
 
   const handleLogout = async (e) => {
     e.preventDefault()
@@ -24,6 +26,9 @@ export default function TopNav() {
       localStorage.removeItem("user")
       localStorage.removeItem("token")
       setIsAuth(false)
+      setIsAuth(false)
+      setProfile({})
+      setProfileImg(null)
     }
     else {
       message.error(result.message)
