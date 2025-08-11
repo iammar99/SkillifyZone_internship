@@ -23,10 +23,22 @@ const req = require("express/lib/request")
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: "http://localhost:3000",
-    methods: ["GET, POST, PUT, DELETE"],
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            "http://localhost:3000",
+            "https://lctf38vz-3000.uks1.devtunnels.ms"
+        ];
+
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);  // Allow the origin
+        } else {
+            callback(new Error('Not allowed by CORS'));  // Reject the origin
+        }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
+
 app.use(cookieParser())
 
 // ----------- Get -----------
@@ -80,7 +92,7 @@ app.get("/admin/orders", async (req, res) => {
         const ordersWithFlattenedItems = orders.map(orderItem => {
             const flattenedItems = orderItem.items.map(item => {
                 let processedProduct = { ...item.id._doc };
-                
+
                 // Debug logging to see what we're working with
                 // console.log('Item structure:', {
                 //     hasId: !!item.id,
@@ -91,11 +103,11 @@ app.get("/admin/orders", async (req, res) => {
 
                 // Multiple approaches to handle different image buffer formats
                 let imgSrc = null;
-                
+
                 if (item.id && item.id.img) {
                     try {
                         let buffer;
-                        
+
                         // Case 1: img is {type: 'Buffer', data: Array}
                         if (item.id.img.type === 'Buffer' && item.id.img.data) {
                             buffer = Buffer.from(item.id.img.data);
@@ -155,9 +167,12 @@ app.get("/admin/orders", async (req, res) => {
     }
 });
 
-app.get("/admin/orders/:id/delete" , async (req,res) => {
+app.get("/admin/orders/:id/delete", async (req, res) => {
     try {
         const orderFound = await order.findByIdAndDelete(req.params.id)
+        const userFound = await user.findById(orderFound.userId)
+        userFound.orders.splice(userFound.cart.indexOf(orderFound.userId), 1);
+        userFound.save()
         res.json({
             success: true,
             message: "Deleted successfully"
@@ -278,8 +293,8 @@ app.get("/profile/user/:id", async (req, res) => {
                     model: 'Product'
                 }
             });
-            console.log(userFound)
-            return
+        // console.log(userFound)
+        // return
 
         let userImgSrc = null;
         if (userFound.profileImg) {
@@ -596,7 +611,7 @@ app.post("/profile/updatePassword/:id", async (req, res) => {
 })
 
 
-app.post("/admin/orders/:id/status", async (req,res) => {
+app.post("/admin/orders/:id/status", async (req, res) => {
     try {
         const orderFound = await order.findById(req.params.id)
         orderFound.status = req.body.status.toLowerCase()
