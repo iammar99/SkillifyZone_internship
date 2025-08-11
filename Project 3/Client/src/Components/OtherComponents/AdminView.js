@@ -25,7 +25,7 @@ export default function AdminOrdersView() {
             if (result.success) {
                 setOrders(result.data);
             } else {
-                console.log.error("Failed to fetch orders");
+                console.log("Failed to fetch orders");
             }
         } catch (error) {
             console.error("Error fetching orders:", error);

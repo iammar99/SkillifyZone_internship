@@ -24,7 +24,7 @@ export default function ProfileContextProvider({ children }) {
                 setProfile(result.data)
             }
             else{
-                message.error("error While loading profile")
+                console.error("error While loading profile")
             }
             console.log("context",result.data)
         } catch (error) {
@@ -35,7 +35,6 @@ export default function ProfileContextProvider({ children }) {
 
     useEffect(() => {
         var userFound = JSON.parse(localStorage.getItem("user"))
-        console.log(userFound)
         if (userFound) {
             fetchData(userFound.id)
         }
